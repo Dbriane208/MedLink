@@ -1,0 +1,17 @@
+{
+  "name": "medlink",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "start": "concurrently \"yarn workspace backend start\" \"yarn workspace frontend start\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1"
+  }
+}
