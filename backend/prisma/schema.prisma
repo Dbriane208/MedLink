@@ -14,28 +14,48 @@ datasource db {
 }
 
 model User {
-  id           Int           @id @default(autoincrement())
-  email        String        @unique
-  name         String
-  role         String        @default("user")
-  appointments Appointment[]
+  id            Int            @id @default(autoincrement())
+  email         String         @unique
+  name          String
+  role          String         @default("user")
+  appointments  Appointment[]
+  prescriptions Prescription[]
 }
 
 model Doctor {
-  id             Int           @id @default(autoincrement())
+  id             Int            @id @default(autoincrement())
   name           String
   specialization String
-  description    String        @db.VarChar(200)
-  status         String        @default("available")
+  description    String         @db.VarChar(200)
+  status         String         @default("available")
   appointments   Appointment[]
+  prescriptions  Prescription[]
 }
 
 model Appointment {
-  id       Int      @id @default(autoincrement())
-  userId   Int      
-  doctorId Int
-  date     DateTime
+  id           Int           @id @default(autoincrement())
+  userId       Int
+  doctorId     Int
+  date         DateTime
+  prescription Prescription?
 
   user   User   @relation(fields: [userId], references: [id])
   doctor Doctor @relation(fields: [doctorId], references: [id])
+}
+
+model Prescription {
+  id            Int      @id @default(autoincrement())
+  patientId     Int
+  doctorId      Int
+  appointmentId Int      @unique
+  medication    String
+  dosage        String
+  frequency     String
+  instructions  String
+  prescribedAt  DateTime @default(now())
+  duration      Int?
+
+  patient     User        @relation(fields: [patientId], references: [id])
+  doctor      Doctor      @relation(fields: [doctorId], references: [id])
+  appointment Appointment @relation(fields: [appointmentId], references: [id])
 }
