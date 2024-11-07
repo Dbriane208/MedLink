@@ -26,7 +26,7 @@ export const protect = async (req: any, res: Response, next: NextFunction) => {
         }
 
         if(!token) {
-            return next(new AppError('No token, authorization denied', 401));
+            return next(new AppError('You are not logged in', 401));
         }
 
         // Verifying the user token
