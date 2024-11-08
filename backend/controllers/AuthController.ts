@@ -4,7 +4,7 @@ import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import prisma from "../prisma/PrismaClient";
 import AppError from "../utils/AppError";
-import { sendPasswordResetEmail } from "../utils/Mail";
+import { sendPasswordResetEmail } from "../utils/MailConfig";
 
 /**
  * Registers a new user.
