@@ -12,13 +12,14 @@ import {
   updateUserById,
   deleteUserById,
 } from "../controllers/UserController";
+import {uploadProfile} from "../controllers/UploadController";
+import { uploadMiddleware } from "../utils/MutlerConfig";
 import {
   registerValidation,
   loginValidation,
 } from "../validators/UserSchemaValidator";
 import { validateRequest } from "../middlewares/ValidationMiddleware";
 import { protect, restrictTo } from "../middlewares/AuthMiddleware";
-import fileUpload, { UploadedFile } from 'express-fileupload';
 
 const router = Router();
 
@@ -33,11 +34,8 @@ router
   .route("/:id")
   .get(protect, restrictTo("admin"), getUserById)
   .patch(protect, updateUserById)
-  .delete(protect, restrictTo("admin"), deleteUserById);
+  .delete(protect, restrictTo("admin"), deleteUserById)
 
-// Enable file upload
-router.use(fileUpload());
-
-
+router.patch("/upload/:id",protect, uploadMiddleware, uploadProfile)
 
 export default router;

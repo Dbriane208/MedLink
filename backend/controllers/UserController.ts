@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import prisma from "../prisma/PrismaClient";
 import AppError from "../utils/AppError";
+
 /**
  * Retrieves all users from the database.
  * 
@@ -90,7 +91,6 @@ export const updateUserById = async (req: Request, res: Response, next: NextFunc
             }
         }
 
-
         const updateData: {name?: string, email?: string} = {};
         if(name) updateData.name = name;
         if(email) updateData.email = email;
@@ -143,5 +143,3 @@ export const deleteUserById = async (req: Request, res: Response, next: NextFunc
         return next(new AppError("Error deleting user", 500));
     }
 }
-
-
