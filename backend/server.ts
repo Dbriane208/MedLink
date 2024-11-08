@@ -7,6 +7,7 @@ dotenv.config();
 
 import AppError from './utils/AppError';
 import AuthRoutes from "./routes/AuthRoutes"
+
 import { connectToDatabase, disconnectDatabase } from './prisma/PrismaClient';
 
 const app: Express = express();
