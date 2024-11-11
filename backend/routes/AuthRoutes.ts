@@ -12,7 +12,7 @@ import {
   updateUserById,
   deleteUserById,
 } from "../controllers/UserController";
-import {uploadProfile} from "../controllers/UploadController";
+import {uploadUserProfile} from "../controllers/UploadController";
 import { uploadMiddleware } from "../utils/MutlerConfig";
 import {
   registerValidation,
@@ -36,6 +36,6 @@ router
   .patch(protect, updateUserById)
   .delete(protect, restrictTo("admin"), deleteUserById)
 
-router.patch("/upload/:id",protect, uploadMiddleware, uploadProfile)
+router.patch("/upload/:id",protect, uploadMiddleware, uploadUserProfile)
 
 export default router;

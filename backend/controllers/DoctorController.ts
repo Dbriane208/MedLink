@@ -1,0 +1,148 @@
+import { Request, Response, NextFunction } from "express";
+import prisma from "../prisma/PrismaClient";
+import AppError from "../utils/AppError";
+import cloudinary from "../utils/CloudinaryConfig";
+import { deleteLocalFile, deleteCloudinaryImage } from "./UploadController";
+
+
+export const getAllDoctors = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const doctors = await prisma.doctor.findMany();
+
+        if(!doctors) {
+            return next(new AppError("There are no users found", 404));
+        }
+
+        res.status(200).json({
+            status: 'success',
+            message: "All doctors fetched successfully",
+            data: doctors
+        });
+
+    } catch (err) {
+        return next(new AppError("Error getting doctors", 500));
+    }
+}
+
+
+export const createDoctor = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+     const doctor = await prisma.doctor.create({ data: req.body });
+
+     res.status(201).json({
+        status: 'success',
+        message: 'Doctor created successfully',
+        data: doctor
+     })
+
+    } catch (err) {
+        console.log(err);
+        return next(new AppError("Error creating a doctor", 500))
+    }
+}
+
+export const getDoctorBySpecialization = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { name } = req.params;
+
+        const tags = await prisma.doctor.findMany({
+            where: { specialization: name }
+        });
+
+        if(!name) {
+            return next(new AppError("Not a recognized specialization", 404));
+        }
+
+        if (!tags) {
+            return next(new AppError("No doctors for this specialization", 404)); 
+        }
+
+        res.status(200).json({
+            status: 'success',
+            message: "Specified Doctors successfully fetched",
+            data: tags
+        });
+
+    } catch (err) {
+        return next(new AppError("Error getting the specified doctors", 500));
+    }
+}
+
+export const getDoctorById = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const docId = parseInt(req.params.id);
+
+        const doctor = await prisma.doctor.findUnique({ where: {id: docId}});
+
+        if(!doctor) {
+            return next(new AppError("Doctor not found", 404));
+        }
+
+        res.status(200).json({
+            status: 'success',
+            message: `${doctor?.name} successfully fetched`,
+            data: doctor
+        });
+
+    } catch (err) {
+        return next(new AppError("Error getting the doctor with that Id", 500));
+    }
+}
+
+export const updateDoctorById = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const docId = parseInt(req.params.id);
+
+        const doctor = await prisma.doctor.findUnique({
+             where: { id: docId },
+             select: { id: true, profilePic: true}
+        });
+
+        if (!doctor) return next(new AppError("Doctor not found", 404));
+        if(!req.file) return next(new AppError("No file uploaded", 400));
+
+        if (doctor.profilePic) await deleteCloudinaryImage(doctor.profilePic);
+
+        const { secure_url } = await cloudinary.uploader.upload(req.file.path, {
+            folder: 'doctor_profile_pictures',
+            transformation: [{ width: 500, height: 500, crop: "fill"}, { quality: "auto"}, { fetc_format: "auto"}]
+        });
+
+        const updateDoctor = await prisma.doctor.update({
+            where: { id: docId },
+            data: { ...req.body, profilePic: secure_url } 
+        });
+
+        deleteLocalFile(req.file.path);
+
+        res.status(200).json({
+            status: 'success',
+            message: "Doctor updated successfully",
+            data: updateDoctor
+        });
+        
+    } catch (err) {
+        if(req.file) deleteLocalFile(req.file.path);
+        return next(new AppError("Error updating doctor details", 500));
+    }
+}
+
+export const deleteDoctorById = async (req: Request, res: Response,  next: NextFunction) => {
+    try {
+        const docId = parseInt(req.params.id);
+
+        if(!docId) {
+            return next(new AppError("Doctor not found", 404));
+        }
+
+        const doctor = await prisma.doctor.delete({ where: { id: docId }});
+
+        res.status(200).json({
+            status: 'success',
+            message: `${doctor.name} successfully deleted`,
+        });
+
+    } catch (err) {
+        return next(new AppError("Error deleting the specified doctor", 500));
+    }
+}

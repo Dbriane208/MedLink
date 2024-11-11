@@ -10,7 +10,7 @@ import fs from 'fs';
  * @param path - The path to the local file to be deleted.
  */
 
-const deleteLocalFile = (path: string) => {
+export const deleteLocalFile = (path: string) => {
     fs.unlink(path, (err) => {
         if (err) console.error('Error deleting local file:', err);
     });
@@ -22,7 +22,7 @@ const deleteLocalFile = (path: string) => {
  * @param url - The URL of the image on Cloudinary. Extracts the public ID and deletes the image.
  */
 
-const deleteCloudinaryImage = async (url: string) => {
+export const deleteCloudinaryImage = async (url: string) => {
     const publicId = url.split('/').pop()?.split('.')[0];
     if (publicId) await cloudinary.api.delete_resources([`profile_pictures/${publicId}`], { type: 'upload', resource_type: 'image' });
 };
@@ -36,7 +36,7 @@ const deleteCloudinaryImage = async (url: string) => {
  * @param next - Express next function, used for error handling.
  */
 
-export const uploadProfile = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const uploadUserProfile = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const userId = parseInt(req.params.id);
 
