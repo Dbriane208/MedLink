@@ -14,7 +14,7 @@ export const getAllUsers = async (req: Request, res: Response, next: NextFunctio
         const users = await prisma.user.findMany();
 
         if(!users) {
-            return next(new AppError("There is no users found", 404));
+            return next(new AppError("There are no users found", 404));
         }
 
         res.status(200).json({
@@ -75,7 +75,7 @@ export const getUserById = async (req: Request, res: Response, next: NextFunctio
 
 export const updateUserById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const {name, email} = req.body;
+        const {name, email} = req.body
         const userId = parseInt(req.params.id);
 
         const user = await prisma.user.findUnique({ where: { id: userId }});
@@ -91,15 +91,9 @@ export const updateUserById = async (req: Request, res: Response, next: NextFunc
             }
         }
 
-        const updateData: {name?: string, email?: string} = {};
-        if(name) updateData.name = name;
-        if(email) updateData.email = email;
-
         const updateUser = await prisma.user.update({
-            where: {
-                id: userId
-            },
-            data: updateData
+            where: { id: userId},
+            data: {...req.body}
         });
 
         res.status(200).json({
