@@ -8,6 +8,7 @@ dotenv.config();
 import AppError from './utils/AppError';
 import AuthRoutes from "./routes/AuthRoutes";
 import DoctorRoutes from "./routes/DoctorRoutes";
+import BookingRoutes from "./routes/BookingRoutes";
 
 import { connectToDatabase, disconnectDatabase } from './prisma/PrismaClient';
 
@@ -36,6 +37,7 @@ app.get("/", (req: Request,res: Response) => {
 // passing all the routes to endpoint
 app.use("/api/v1/users", AuthRoutes);
 app.use("/api/v1/doctors", DoctorRoutes);
+app.use("/api/v1/bookings", BookingRoutes);
 
 
 // Handling undefined routes
