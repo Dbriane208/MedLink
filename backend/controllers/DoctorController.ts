@@ -1,4 +1,6 @@
 import { Request, Response, NextFunction } from "express";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 import prisma from "../prisma/PrismaClient";
 import AppError from "../utils/AppError";
 import cloudinary from "../utils/CloudinaryConfig";
@@ -111,7 +113,7 @@ export const getDoctorById = async (req: Request, res: Response, next: NextFunct
     }
 }
 
-export const updateDoctorById = async (req: Request, res: Response, next: NextFunction) => {
+export const updateDoctorsDataById = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const docId = parseInt(req.params.id);
 
@@ -130,9 +132,11 @@ export const updateDoctorById = async (req: Request, res: Response, next: NextFu
             transformation: [{ width: 500, height: 500, crop: "fill"}, { quality: "auto"}, { fetc_format: "auto"}]
         });
 
+        const { email, password, ...updatedData} = req.body;
+
         const updateDoctor = await prisma.doctor.update({
             where: { id: docId },
-            data: { ...req.body, profilePic: secure_url } 
+            data: { ...updatedData, profilePic: secure_url } 
         });
 
         deleteLocalFile(req.file.path);
@@ -169,5 +173,43 @@ export const deleteDoctorById = async (req: Request, res: Response,  next: NextF
     } catch (err) {
         console.log(err);
         return next(new AppError("Error deleting the specified doctor", 500));
+    }
+}
+
+export const updateDoctorEmailAndPasswordById = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const docId = parseInt(req.params.id);
+        const { email, password} = req.body;
+
+        const existingdoctor = await prisma.doctor.findFirst({where: {id: docId}});
+
+        if(!existingdoctor) return next(new AppError("Doctor not found", 404));
+
+        const newemail = await prisma.doctor.findFirst({ where: {email: email}});
+
+        if(newemail) return next(new AppError("Email already exists with another doctor", 404));
+
+        const hashedPassword = await bcrypt.hash(password, 15);
+
+        const doctor = await prisma.doctor.update({
+            where: {id: docId},
+            data: {
+                email: email,
+                password: hashedPassword
+            }
+        });
+
+        const token = jwt.sign({ id: doctor.id}, process.env.JWT_TOKEN!, {expiresIn: "10d"});
+
+        res.status(201).json({
+            status: "success",
+            message: "Doctor email and password updated successfully",
+            token: token,
+            data: doctor,
+          });
+
+
+    } catch (err) {
+        return next(new AppError("Error updating doctor email and password", 500));
     }
 }

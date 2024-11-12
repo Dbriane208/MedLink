@@ -1,15 +1,22 @@
 import { Router } from "express";
-import { createAppointment, getAllAppointments,cancelAppointmentById,updateAppointmentById } from "../controllers/BookingController";
+import { protect, restrictTo } from "../middlewares/AuthMiddleware";
+import { createAppointment, getAllAppointments,cancelAppointmentById,updateAppointmentById,getAppointmentsByDoctorId,getAppointmentsByUserId } from "../controllers/BookingController";
 
 const router = Router();
 
 router.route("/")
-.post(createAppointment)
-.get(getAllAppointments)
+.post(protect, createAppointment)
+.get(protect, getAllAppointments)
 
 router.route("/:id")
-.patch(updateAppointmentById)
-.delete(cancelAppointmentById)
+.patch(protect, updateAppointmentById)
+.delete(protect, cancelAppointmentById)
+
+router.route("/user/:id")
+.get(protect, getAppointmentsByUserId)
+
+router.route("/doctor/:id")
+.get(protect, getAppointmentsByDoctorId)
 
 export default router
 

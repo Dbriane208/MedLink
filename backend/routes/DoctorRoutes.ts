@@ -5,7 +5,8 @@ import {
   getAllDoctors,
   getDoctorBySpecialization,
   deleteDoctorById,
-  updateDoctorById
+  updateDoctorsDataById,
+  updateDoctorEmailAndPasswordById
 } from "../controllers/DoctorController";
 import { uploadMiddleware } from "../utils/MutlerConfig";
 import { protect, restrictTo } from "../middlewares/AuthMiddleware";
@@ -19,10 +20,13 @@ router.route("/")
 router.route("/specialization/:name")
 .get(protect, getDoctorBySpecialization)
 
+router.route("/update/:id")
+.patch(protect, updateDoctorEmailAndPasswordById)
+
 router
   .route("/:id")
   .get(protect, getDoctorById)
-  .patch(protect, uploadMiddleware, updateDoctorById)
+  .patch(protect, uploadMiddleware, updateDoctorsDataById)
   .delete(protect,restrictTo("admin"), deleteDoctorById)
  
 export default router;
