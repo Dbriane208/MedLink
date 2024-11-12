@@ -47,7 +47,6 @@ model Appointment {
   userId       Int
   doctorId     Int
   date         DateTime
-  prescription Prescription?
 
   user   User   @relation(fields: [userId], references: [id])
   doctor Doctor @relation(fields: [doctorId], references: [id])
@@ -67,5 +66,4 @@ model Prescription {
 
   patient     User        @relation(fields: [patientId], references: [id])
   doctor      Doctor      @relation(fields: [doctorId], references: [id])
-  appointment Appointment @relation(fields: [appointmentId], references: [id])
 }

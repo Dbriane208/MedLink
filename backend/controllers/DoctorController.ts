@@ -7,7 +7,18 @@ import { deleteLocalFile, deleteCloudinaryImage } from "./UploadController";
 
 export const getAllDoctors = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const doctors = await prisma.doctor.findMany();
+        const doctors = await prisma.doctor.findMany({
+            include: {
+                appointments: {
+                    select: {
+                        id: true,
+                        user: true,
+                        date: true,
+                    },
+                },
+                prescriptions: true,
+            },
+        });
 
         if(!doctors) {
             return next(new AppError("There are no users found", 404));
@@ -36,7 +47,6 @@ export const createDoctor = async (req: Request, res: Response, next: NextFuncti
      })
 
     } catch (err) {
-        console.log(err);
         return next(new AppError("Error creating a doctor", 500))
     }
 }
@@ -72,7 +82,19 @@ export const getDoctorById = async (req: Request, res: Response, next: NextFunct
     try {
         const docId = parseInt(req.params.id);
 
-        const doctor = await prisma.doctor.findUnique({ where: {id: docId}});
+        const doctor = await prisma.doctor.findUnique({ 
+            where: {id: docId},
+            include: {
+                appointments: {
+                    select: {
+                        id: true,
+                        user: true,
+                        date: true,
+                    },
+                },
+                prescriptions: true,
+            },
+        });
 
         if(!doctor) {
             return next(new AppError("Doctor not found", 404));
@@ -131,18 +153,21 @@ export const deleteDoctorById = async (req: Request, res: Response,  next: NextF
     try {
         const docId = parseInt(req.params.id);
 
-        if(!docId) {
+        const doctor = await prisma.doctor.findFirst({where: {id: docId}})
+
+        if(!doctor) {
             return next(new AppError("Doctor not found", 404));
         }
 
-        const doctor = await prisma.doctor.delete({ where: { id: docId }});
+        await prisma.doctor.delete({ where: { id: docId }});
 
         res.status(200).json({
             status: 'success',
-            message: `${doctor.name} successfully deleted`,
+            message: "Doctor successfully deleted",
         });
 
     } catch (err) {
+        console.log(err);
         return next(new AppError("Error deleting the specified doctor", 500));
     }
 }

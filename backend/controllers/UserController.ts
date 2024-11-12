@@ -11,7 +11,24 @@ import AppError from "../utils/AppError";
 
 export const getAllUsers = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const users = await prisma.user.findMany();
+        const users = await prisma.user.findMany({
+            include: {
+                appointments: {
+                    select: {
+                        id: true,
+                        date: true,
+                        doctor: {
+                            select: {
+                                id: true,
+                                name: true,
+                                specialization: true,
+                            },
+                        },
+                    },
+                },
+                prescriptions: true,
+            },
+        });
 
         if(!users) {
             return next(new AppError("There are no users found", 404));
@@ -40,14 +57,22 @@ export const getUserById = async (req: Request, res: Response, next: NextFunctio
     try {
         const user = await prisma.user.findUnique({
             where: { id: parseInt(req.params.id)},
-            select: {
-                name: true,
-                email: true,
-                role: true,
-                appointments: true,
+            include: {
+                appointments: {
+                    select: {
+                        id: true,
+                        date: true,
+                        doctor: {
+                            select: {
+                                id: true,
+                                name: true,
+                                specialization: true,
+                            },
+                        },
+                    },
+                },
                 prescriptions: true,
-                createdAt: true
-            }
+            },
         });
 
         if(!user) {
