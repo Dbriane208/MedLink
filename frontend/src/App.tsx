@@ -1,7 +1,14 @@
 import './App.css'
+import LandingPage from './pages/LandingPage'
 
 function App() {
-  return <h2>Hello World</h2>
+  return (
+    <>
+      <div>
+        <LandingPage />
+      </div>
+    </>
+  )
 }
 
 export default App
