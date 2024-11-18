@@ -1,6 +1,16 @@
+import ResponsiveNavbar from "./Navbar";
+
+
 const Welcome = () => {
     return (
-        <div className="relative h-screen w-screen bg-gradient-to-b from-white flex items-center justify-center">
+        <div className="relative h-screen w-screen bg-gradient-to-b from-white flex flex-col items-center justify-center">
+             {/* Navbar */}
+            <header className="sticky top-0 w-screen z-10 bg-white p-4 shadow-md rounded-full flex justify-center">
+                <div className="w-screen-lg w-full mx-10">
+                    <ResponsiveNavbar />
+                </div>
+            </header>
+
             {/* Background image */}
             <div className="absolute inset-0 h-screen w-screen">
                 <img 

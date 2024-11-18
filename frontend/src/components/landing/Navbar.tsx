@@ -1,8 +1,10 @@
 import {useState} from "react";
+import { useNavigate } from "react-router-dom";
 import {IoIosSearch} from "react-icons/io";
 import {CiMenuFries} from "react-icons/ci";
 
 const ResponsiveNavbar = () => {
+    const navigate = useNavigate()
 
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
 
@@ -12,16 +14,18 @@ const ResponsiveNavbar = () => {
             <img src="https://i.ibb.co/0BZfPq6/darklogo.png" alt="logo" className="w-[55px] "/>
             <ul className="items-center gap-[20px] text-[1rem] text-[#424242] lg:flex hidden">
                 <li className="before:w-0 hover:before:w-full before:bg-[#3B9DF8] before:h-[2px] before:transition-all before:duration-300 before:absolute relative before:rounded-full before:bottom-[-2px] hover:text-[#3B9DF8] transition-all duration-300 before:left-0 cursor-pointer capitalize">Home</li>
-                <li className="before:w-0 hover:before:w-full before:bg-[#3B9DF8] before:h-[2px] before:transition-all before:duration-300 before:absolute relative before:rounded-full before:bottom-[-2px] hover:text-[#3B9DF8] transition-all duration-300 before:left-0 cursor-pointer capitalize">Services</li>
-                <li className="before:w-0 hover:before:w-full before:bg-[#3B9DF8] before:h-[2px] before:transition-all before:duration-300 before:absolute relative before:rounded-full before:bottom-[-2px] hover:text-[#3B9DF8] transition-all duration-300 before:left-0 cursor-pointer capitalize">Testimonials</li>
+                <li onClick= {() => navigate('/services')} className="before:w-0 hover:before:w-full before:bg-[#3B9DF8] before:h-[2px] before:transition-all before:duration-300 before:absolute relative before:rounded-full before:bottom-[-2px] hover:text-[#3B9DF8] transition-all duration-300 before:left-0 cursor-pointer capitalize">Services</li>
+                <li onClick= {() => navigate('/testimonials')} className="before:w-0 hover:before:w-full before:bg-[#3B9DF8] before:h-[2px] before:transition-all before:duration-300 before:absolute relative before:rounded-full before:bottom-[-2px] hover:text-[#3B9DF8] transition-all duration-300 before:left-0 cursor-pointer capitalize">Testimonials</li>
             </ul>
 
             <div className="items-center gap-[10px] flex">
                 <button
+                onClick={() => navigate('/login')}
                     className="py-[7px] text-[1rem] px-[16px] rounded-full capitalize hover:text-[#3B9DF8] transition-all duration-300 sm:flex hidden">Sign
                     in
                 </button>
                 <button
+                onClick={() => navigate('/register')}
                     className="py-[7px] text-[1rem] px-[16px] rounded-full capitalize bg-[#3B9DF8] text-white hover:bg-blue-400 transition-all duration-300 sm:flex hidden">Sign
                     up
                 </button>
