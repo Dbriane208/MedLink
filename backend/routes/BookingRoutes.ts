@@ -5,8 +5,8 @@ import { createAppointment, getAllAppointments,cancelAppointmentById,updateAppoi
 const router = Router();
 
 router.route("/")
-.post(protect, createAppointment)
-.get(protect, getAllAppointments)
+.post(createAppointment)
+.get(getAllAppointments)
 
 router.route("/:id")
 .patch(protect, updateAppointmentById)
