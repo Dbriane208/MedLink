@@ -34,7 +34,12 @@ export const createAppointment = async (req: Request, res: Response, next: NextF
 
 export const getAllAppointments = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const appointments = await prisma.appointment.findMany();
+        const appointments = await prisma.appointment.findMany({
+            include: {
+                user: true,
+                doctor: true
+            }
+        });
 
         if(!appointments) return next(new AppError("No available appointments", 400));
 
@@ -87,5 +92,57 @@ export const updateAppointmentById = async (req: Request, res: Response, next: N
 
     } catch (err) {
         return next(new AppError("Error updating Appointment", 500));
+    }
+}
+
+export const getAppointmentsByUserId = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const userId = parseInt(req.params.id);
+
+        const user = await prisma.user.findFirst({where: { id: userId}});
+
+        if(!user) return next(new AppError("User not found", 404));
+
+        const appointment = await prisma.appointment.findMany({
+            where: {userId: userId},
+            include: {
+                doctor: true
+            }
+        });
+
+        res.status(200).json({
+            status: 'success',
+            message: "User appointments fetched successfully",
+            data: appointment
+        });
+
+    } catch (err) {
+        return next(new AppError("Error getting appointments for this user", 500));
+    }
+}
+
+export const getAppointmentsByDoctorId = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const docId = parseInt(req.params.id);
+
+        const doctor = await prisma.doctor.findFirst({ where: {id: docId}});
+
+        if(!doctor) return next(new AppError("Doctor not found", 404));
+        
+        const appointment = await prisma.appointment.findMany({
+            where: {doctorId: docId},
+            include: {
+                user: true
+            }
+        });
+
+        res.status(200).json({
+            status: 'success',
+            message: "Doctor Appointments fetched successfully",
+            data: appointment
+        });
+
+    } catch (err) {
+        return next(new AppError("Error getting appointments for this doctor", 500));
     }
 }

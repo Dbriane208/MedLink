@@ -9,6 +9,7 @@ import AppError from './utils/AppError';
 import AuthRoutes from "./routes/AuthRoutes";
 import DoctorRoutes from "./routes/DoctorRoutes";
 import BookingRoutes from "./routes/BookingRoutes";
+import PrescriptionRoutes from "./routes//PrescriptionRoutes";
 
 import { connectToDatabase, disconnectDatabase } from './prisma/PrismaClient';
 
@@ -38,6 +39,7 @@ app.get("/", (req: Request,res: Response) => {
 app.use("/api/v1/users", AuthRoutes);
 app.use("/api/v1/doctors", DoctorRoutes);
 app.use("/api/v1/bookings", BookingRoutes);
+app.use("/api/v1/prescriptions", PrescriptionRoutes);
 
 
 // Handling undefined routes

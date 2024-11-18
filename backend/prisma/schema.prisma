@@ -48,6 +48,7 @@ model Appointment {
   userId       Int
   doctorId     Int
   date         DateTime
+  prescription Prescription?
 
   user   User   @relation(fields: [userId], references: [id])
   doctor Doctor @relation(fields: [doctorId], references: [id])
@@ -58,13 +59,14 @@ model Prescription {
   patientId     Int
   doctorId      Int
   appointmentId Int      @unique
-  medication    String
-  dosage        String
-  frequency     String
-  instructions  String
+  medication    String?
+  dosage        String?
+  frequency     String?
+  instructions  String?
   prescribedAt  DateTime @default(now())
-  duration      Int?
+  duration      String?
 
   patient     User        @relation(fields: [patientId], references: [id])
   doctor      Doctor      @relation(fields: [doctorId], references: [id])
+  appointment Appointment @relation(fields: [appointmentId], references: [id])
 }
