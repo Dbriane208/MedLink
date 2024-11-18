@@ -14,7 +14,7 @@ const router = Router();
 
 router.route("/")
 .post(protect, restrictTo("admin"),createDoctor)
-.get(protect, restrictTo("admin"),getAllDoctors)
+.get(getAllDoctors)
 
 router.route("/specialization/:name")
 .get(protect, getDoctorBySpecialization)

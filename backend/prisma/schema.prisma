@@ -32,6 +32,7 @@ model User {
 model Doctor {
   id             Int            @id @default(autoincrement())
   name           String
+  experience     String         @default("0 years")
   email          String         @default("doctor@medlink.com")
   password       String         @default("doctor123")
   specialization String         @default("General")

@@ -4,7 +4,11 @@ import { createAppointment, getAllAppointments,cancelAppointmentById,updateAppoi
 const router = Router();
 
 router.route("/")
+<<<<<<< Updated upstream
 .post(createAppointment)
+=======
+.post(protect, createAppointment)
+>>>>>>> Stashed changes
 .get(getAllAppointments)
 
 router.route("/:id")
