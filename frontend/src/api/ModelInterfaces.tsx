@@ -13,6 +13,7 @@ export interface User {
 }
 
 export interface Doctor {
+    id: number
     name: string;
     description: string;
     specialization: string;
@@ -26,7 +27,6 @@ export interface Appointment {
     userId: number,
     doctorId: number,
     date: Date,
-    user: User,
     doctor: Doctor
 }
 
