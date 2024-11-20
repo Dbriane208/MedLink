@@ -1,27 +1,42 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMutation } from "@tanstack/react-query";
-import { getDoctors } from "../../api/Api";
+import { createAppointment, getDoctors } from "../../api/Api";
 import { handleAxiosError } from "../../utils/AxiosError";
 import { useState, useEffect } from "react";
 import { Doctor } from "../../api/ModelInterfaces";
+import { checkAuthAndGetUserId } from "../../utils/CurrentUser";
 
 export default function Doctors() {
     const [doctors, setDoctors] = useState<Doctor[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [showPopup, setShowPopup] = useState(false);
+    const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
+    const [date, setAppointmentDate] = useState<Date | null>(null);
+    const [userId, setUserId] = useState<number | null>(null);
+
+    useEffect(() => {
+        const id = checkAuthAndGetUserId();
+        if (id) {
+            setUserId(id);
+        }
+    }, []);
 
     const mutation = useMutation({
         mutationFn: getDoctors,
         onSuccess: (data: any) => {
-            const doctorsArray = Array.isArray(data) ? data : 
-                (data?.data ? (Array.isArray(data.data) ? data.data : []) : []);
+            const doctorsArray = Array.isArray(data)
+                ? data
+                : data?.data
+                ? Array.isArray(data.data)
+                    ? data.data
+                    : []
+                : [];
             
             if (doctorsArray.length > 0) {
                 setDoctors(doctorsArray);
-                console.log("Doctors fetched successfully", doctorsArray);
                 setError(null);
             } else {
-                console.error("No doctors data found");
                 setError("No doctors available.");
             }
             setLoading(false);
@@ -30,16 +45,48 @@ export default function Doctors() {
             const errData = handleAxiosError(error);
             const errorMessage = typeof errData === "string" ? errData : "An unknown error occurred.";
             setError(errorMessage);
-            console.error("Error fetching doctors:", errorMessage);
             setLoading(false);
-        }
+        },
     });
 
-    // UseEffect to trigger the fetch once
+    const appointmentMutation = useMutation({
+        mutationFn: createAppointment,
+        onSuccess: (data: any) => {
+            console.log("Appointment successfull",data);
+            setLoading(false);
+            setShowPopup(false);
+        },
+        onError: (error: any) => {
+            const errData = handleAxiosError(error);
+            const errorMessage = typeof errData === "string" ? errData : "An unknown error occurred.";
+            setError(errorMessage);
+            setLoading(false);
+        },
+    });
+
+    const handleCreateAppointment = () => {
+        if (!date || !selectedDoctor || !userId) {
+            setError("Please fill in all required fields.");
+            return;
+        }
+        setLoading(true);
+        appointmentMutation.mutate({
+            userId,
+            doctorId: selectedDoctor.id,
+            date: date,
+        });
+    };
+
     useEffect(() => {
         setLoading(true);
         mutation.mutate();
-    }, []); 
+    }, []);
+
+    const handleBookNow = (doctor: Doctor) => {
+        setSelectedDoctor(doctor);
+        setAppointmentDate(null);
+        setShowPopup(true);
+    };
 
     if (loading) {
         return <div>Loading...</div>;
@@ -80,10 +127,14 @@ export default function Doctors() {
 
                                 <div className="space-y-2">
                                     <h3 className="text-xl font-bold text-gray-900">{doctor.name}</h3>
-                                    <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium`}>
+                                    <span className="inline-flex px-3 py-1 rounded-full text-sm text-black font-medium">
                                         {doctor.specialization}
                                     </span>
                                 </div>
+
+                                <p className="text-gray-600 mt-4 mb-6 text-sm leading-relaxed min-h-[80px]">
+                                    {doctor.status}
+                                </p>
 
                                 <p className="text-gray-600 mt-4 mb-6 text-sm leading-relaxed min-h-[80px]">
                                     {doctor.description}
@@ -94,7 +145,10 @@ export default function Doctors() {
                                         <span>Experience: {doctor.experience} years</span>
                                     </div>
                                     <div className="flex justify-center">
-                                        <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm">
+                                        <button
+                                            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+                                            onClick={() => handleBookNow(doctor)}
+                                        >
                                             Book Now
                                         </button>
                                     </div>
@@ -104,6 +158,47 @@ export default function Doctors() {
                     </div>
                 )}
             </div>
+
+            {/* Pop-up Card */}
+            {showPopup && selectedDoctor && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+                        <h3 className="text-xl font-bold text-gray-800 mb-4">Book Appointment</h3>
+                        <p className="text-gray-600 mb-4">
+                            Doctor ID: <strong>{selectedDoctor.id}</strong>
+                        </p>
+                        <p className="text-gray-600 mb-4">
+                            User ID: <strong>{userId}</strong>
+                        </p>
+                        <div className="mb-4">
+                            <label htmlFor="date" className="text-gray-700 block mb-2">
+                                Appointment Date
+                            </label>
+                            <input
+                                type="date"
+                                id="date"
+                                value={date ? date.toISOString().split('T')[0] : ""}
+                                onChange={(e) => setAppointmentDate(new Date(e.target.value))}
+                                className="peer border-[#e5eaf2] border rounded-md outline-none pl-10 pr-4 py-3 w-full focus:border-[#3B9DF8] transition-colors duration-300"
+                            />
+                        </div>
+                        <div className="flex justify-end gap-4">
+                            <button
+                                onClick={handleCreateAppointment}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                            >
+                                Create
+                            </button>
+                            <button
+                                onClick={() => setShowPopup(false)}
+                                className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
