@@ -6,7 +6,7 @@ export interface User {
     profilePic: string;
     resetToken: string | null;
     resetTokenExpires: string | null;
-    role: string;
+    token: string;
     loggedOut: boolean;
     createdAt: string;
     updatedAt: string;
@@ -15,6 +15,7 @@ export interface User {
 export interface Doctor {
     id: number
     name: string;
+    email: string;
     description: string;
     specialization: string;
     profilePic: string;
@@ -27,7 +28,8 @@ export interface Appointment {
     userId: number,
     doctorId: number,
     date: Date,
-    doctor: Doctor
+    doctor: Doctor,
+    user: User
 }
 
 export interface Prescription {

@@ -125,7 +125,6 @@ export const updateUserNameAndEmailById = async (details: UpdateUserNameAndPassw
     
 } 
 
-
 // create an appointment
 export const createAppointment = async (book: Appointment): Promise<any> => {
     try {
@@ -199,6 +198,36 @@ export const getAppointmentByUserId = async (userId: number): Promise<any> => {
 }
 
 // get appointment by id
+export const getAppointmentByDoctorId = async (docId: number): Promise<any> => {
+    try {
+        const token: any = localStorage.getItem("doctor");
+
+        if(!token) {
+            console.log("No token found in local storage");
+        }
+
+        const usertoken = JSON.parse(token)
+
+        const url = `${BASE_URL}/bookings/doctor/${docId}`
+
+        const response = await axios.get(url, {
+            headers: {
+                'Content-Type': 'application/json',
+                 Authorization: `Bearer ${usertoken.token}`
+            }
+        });
+
+        return response.data
+
+    } catch (err) {
+        const er = handleAxiosError(err)
+        if(er) {
+            console.log("Error getting doctor appointments:", er);
+        }
+    }
+}
+
+// get appointment by id
 export const deleteAppointmentId = async (appId: number): Promise<any> => {
     try {
         const token: any = localStorage.getItem("token");
@@ -260,6 +289,37 @@ export const getPrescriptionsByUserId = async (userId: number): Promise<any> => 
     }
 }
 
+
+// get prescription by doctors id
+export const getPrescriptionsByDoctorId = async (docId: number): Promise<any> => {
+    try {
+        const token: any = localStorage.getItem("doctor");
+
+        if(!token) {
+            console.log("No token found in local storage");
+        }
+
+        const usertoken = JSON.parse(token)
+
+        const url = `${BASE_URL}/prescriptions/doctor/${docId}`
+
+        const response = await axios.get(url, {
+            headers: {
+                'Content-Type': 'application/json',
+                 Authorization: `Bearer ${usertoken.token}`
+            }
+        });
+
+        return response.data
+
+    } catch (err) {
+        const er = handleAxiosError(err)
+        if(er) {
+            console.log("Error getting doctor prescriptions:", er);
+        }
+    }
+}
+
 // get all prescriptions
 export const getPrescriptions = async (): Promise<any> => {
     try {
@@ -296,6 +356,55 @@ export const getDoctors = async (): Promise<any> => {
         const er = handleAxiosError(err)
         if(er) {
             console.log("Error getting doctors:", er);
+        }
+    }
+}
+
+// login doctor
+export const loginDoctor = async (userData: LoginUserData): Promise<any> => {
+    try {
+        const url = `${BASE_URL}/doctors/login`
+
+        const response = await axios.post(url, userData, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        return response.data;
+    } catch (err) {
+        const er = handleAxiosError(err)
+        if(er) {
+            console.log("Error Logging in Doctor:", er);
+        }
+    }
+}
+
+// get doctor by Id
+export const getDoctorbyId = async (docId: number): Promise<any> => {
+    try {
+        const token: any = localStorage.getItem("doctor");
+
+        if(!token) {
+            console.log("No token found in local storage");
+        }
+
+        const usertoken = JSON.parse(token)
+
+        const url = `${BASE_URL}/doctors/${docId}`
+
+        const response = await axios.get(url, {
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${usertoken.token}`
+            }
+        });
+
+        return response.data;
+    } catch (err) {
+        const er = handleAxiosError(err)
+        if(er) {
+            console.log("Error getting the Doctor:", er);
         }
     }
 }

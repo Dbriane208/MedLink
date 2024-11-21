@@ -2,64 +2,51 @@
 import { useEffect, useState } from "react";
 import { MdSchedule } from "react-icons/md";
 import { IoSettingsOutline } from "react-icons/io5";
-import { FaPrescriptionBottleMedical } from "react-icons/fa6";
+import { FaPrescriptionBottleMedical, FaUserDoctor } from "react-icons/fa6";
 import { LuHelpCircle, LuLogOut } from "react-icons/lu";
 import { FaTimes } from "react-icons/fa";
 import { useMutation } from "@tanstack/react-query";
-import { deleteAppointmentId, getAppointmentByUserId, getPrescriptionsByUserId, getUserbyId, } from "../../api/Api";
+import { getAppointments, getDoctors, getPrescriptions, getUserbyId} from "../../api/Api";
 import { handleAxiosError } from "../../utils/AxiosError";
 import { formatDate } from "../../utils/FormatDate";
-import { Appointment, Prescription, User } from "../../api/ModelInterfaces";
+import { Appointment, Doctor, Prescription, User } from "../../api/ModelInterfaces";
 import { checkAuthAndGetUserId } from "../../utils/CurrentUser";
 import { useNavigate } from "react-router-dom";
 
-const UserSidebar = () => {
+const AdminSidebar = () => {
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
-    const [error, ] = useState<string | null>(null);
+    const [doctors, setDoctors] = useState<Doctor[]>([]);
+    const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [showAppointments, setShowAppointments] = useState(false);
     const [showPrescriptions, setShowPrescriptions] = useState(false);
-    const [, setUserId] = useState<number | null>(null);
+    const [showDoctors, setShowDoctors] = useState(false);
+    const [_, setUserId] = useState<number | null>(null);
     const [user, setUser] = useState<User>();
     const [showPopup, setShowPopup] = useState(false);
     const [name, setName] = useState<string>('');
     const [email, setEmail] = useState<string>('');
     const navigate = useNavigate();
 
+
     const getUser = useMutation({
         mutationFn: (id: number) => getUserbyId(id),
-        onSuccess: (data: any) => {
+        onSuccess: (data: User) => {
             console.log("User data", data)
             setUser(data)
+            setError(null)
         },
-        onError: (error: any) => {
+        onError: (error) => {
             const errData = handleAxiosError(error);
             const errorMessage = typeof errData === "string" ? errData : "An unknown error occurred.";
-            console.log("Error on home",errorMessage);
+            setError(errorMessage);
             setLoading(false);
         }
     });
 
-    // const updateUser = useMutation({
-    //     mutationFn: ({ userData, userId }: { userData: UpdateUserNameAndPassword; userId: number }) => 
-    //         updateUserNameAndEmailById(userData, userId),
-    //     onSuccess: (data: User) => {
-    //         setUser(data); 
-    //         setShowPopup(false); 
-    //         setError(null);
-    //         setLoading(false);
-    //     },
-    //     onError: (error: any) => {
-    //         const errData = handleAxiosError(error);
-    //         const errorMessage = typeof errData === "string" ? errData : "An unknown error occurred.";
-    //         setError(errorMessage);
-    //         setLoading(false);
-    //     }
-    // });
-
     const mutation = useMutation({
-        mutationFn: (id: number) => getAppointmentByUserId(id),
+        mutationFn: getAppointments,
         onSuccess: (data: any) => {
             const appointmentArray = Array.isArray(data) ? data :
                 (data?.data ? (Array.isArray(data.data) ? data.data : []) : []);
@@ -67,6 +54,7 @@ const UserSidebar = () => {
             if (appointmentArray.length > 0) {
                 setAppointments(appointmentArray);
                 console.log("Appointments fetched successfully", appointmentArray);
+                setError(null);
             } else {
                 console.error("No appointment data found");
             }
@@ -75,13 +63,14 @@ const UserSidebar = () => {
         onError: (error: any) => {
             const errData = handleAxiosError(error);
             const errorMessage = typeof errData === "string" ? errData : "An unknown error occurred.";
+            setError(errorMessage);
             console.error("Error fetching appointments:", errorMessage);
             setLoading(false);
         }
     });
 
     const mutPrescription = useMutation({
-        mutationFn: (userId: number) => getPrescriptionsByUserId(userId),
+        mutationFn: getPrescriptions,
         onSuccess: (data: any) => {
             const prescriptionArray = Array.isArray(data) ? data :
                 (data?.data ? (Array.isArray(data.data) ? data.data : []) : []);
@@ -89,33 +78,44 @@ const UserSidebar = () => {
             if (prescriptionArray.length > 0) {
                 setPrescriptions(prescriptionArray);
                 console.log("Prescriptions fetched successfully", prescriptionArray);
+                // setError(null)
             } else {
                 console.error("No prescription data found");
-                // setError("No prescription available");
             }
             setLoading(false);
         },
         onError: (error: any) => {
             const errData = handleAxiosError(error);
             const errorMessage = typeof errData === "string" ? errData : "An unknown error occurred.";
+            setError(errorMessage);
             console.error("Error fetching prescriptions:", errorMessage);
             setLoading(false);
         }
     });
 
-    const deleteAppointment = useMutation({
-        mutationFn: (appId: number) => deleteAppointmentId(appId),
+    const mutDoctors = useMutation({
+        mutationFn: getDoctors,
         onSuccess: (data: any) => {
-            setAppointments(data)
-            console.log("Appointment deleted successfully")
+            const doctorsArray = Array.isArray(data) ? data :
+                (data?.data ? (Array.isArray(data.data) ? data.data : []) : []);
+
+            if (doctorsArray.length > 0) {
+                setDoctors(doctorsArray);
+                console.log("Doctors fetched successfully", doctorsArray);
+                setError(null)
+            } else {
+                console.error("No Doctors data found");
+            }
+            setLoading(false);
         },
-        onError: () => {
+        onError: (error: any) => {
             const errData = handleAxiosError(error);
             const errorMessage = typeof errData === "string" ? errData : "An unknown error occurred.";
-            console.error("Error fetching prescriptions:", errorMessage);
+            setError(errorMessage);
+            console.error("Error fetching doctors:", errorMessage);
             setLoading(false);
         }
-    })
+    });
 
     useEffect(() => {
         setLoading(true);
@@ -130,29 +130,15 @@ const UserSidebar = () => {
         Promise.all([
             mutPrescription.mutate(id),
             mutation.mutate(id),
+            mutDoctors.mutate()
         ]).finally(() => {
             setLoading(false);
         });
     }, []);
 
-    const handleDeleteAppointment = (app: Appointment) => {
-        deleteAppointment.mutate(app.id);
-      };
-
-    // const handleUpdateUser = () => {
-    //     const id = checkAuthAndGetUserId();
-    //     setUserId(id)
-
-    //     if (!name || !email) {
-    //         setError("Please fill in all required fields.");
-    //         return;
-    //     }
-    //     setLoading(true);
-    //     updateUser.mutate({ email, name }, userId);
-    // };
-
     const handleCloseAppointments = () => setShowAppointments(false);
     const handleClosePrescriptions = () => setShowPrescriptions(false);
+    const handleCloseDoctors = () => setShowDoctors(false)
 
     const handleLogout = () => {
         const token = localStorage.removeItem("token")
@@ -242,6 +228,15 @@ const UserSidebar = () => {
                             <FaPrescriptionBottleMedical className="text-xl text-gray-800" />
                             <p className="text-sm font-medium text-gray-800">All Prescriptions</p>
                         </div>
+
+                         {/* All Doctors */}
+                         <div
+                            className="flex items-center gap-4 hover:bg-gray-50 p-2 rounded-md cursor-pointer"
+                            onClick={() => setShowDoctors(true)}
+                        >
+                            <FaUserDoctor className="text-xl text-gray-800" />
+                            <p className="text-sm font-medium text-gray-800">All Doctors</p>
+                        </div>
                     </div>
                 </div>
 
@@ -278,7 +273,7 @@ const UserSidebar = () => {
                         >
                             <FaTimes size={24} />
                         </button>
-                        <h2 className="text-lg font-bold mb-4">All Appointments</h2>
+                        <h2 className="text-lg text-black font-bold mb-4">All Appointments</h2>
                         {appointments.map((appointment) => (
                             <div
                                 key={appointment.id}
@@ -302,9 +297,56 @@ const UserSidebar = () => {
                                 <div className="flex gap-3">
                                     <button className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">Update</button>
                                     <button
-                                    onClick={handleDeleteAppointment}
                                      className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
                                     >Delete</button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+             {/* Pop-up Card */}
+            {showDoctors && (
+                <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white w-11/12 md:w-1/2 max-h-[80%] overflow-y-auto rounded-md shadow-lg p-6 relative">
+                        <button
+                            className="absolute top-4 right-4 text-black hover:text-gray-700"
+                            onClick={handleCloseDoctors}
+                        >
+                            <FaTimes size={24} />
+                        </button>
+                        <h2 className="text-lg text-black font-bold mb-4">All Doctors</h2>
+                        {doctors.map((doctor) => (
+                            <div
+                                key={doctor.id}
+                                className="border-b border-gray-200 py-4 flex items-center justify-between"
+                            >
+                                <div className="flex flex-col">
+                                    <div className="flex gap-2 text-sm">
+                                        <span className="text-gray-500">Doctor Name:</span>
+                                        <span className="text-gray-500">{doctor.name || "N/A"}</span>
+                                    </div>
+                                    <div className="flex gap-2 text-sm">
+                                        <span className="text-gray-500">Doctor Email:</span>
+                                        <span className="text-gray-500">{doctor.email || "N/A"}</span>
+                                    </div>
+                                    <div className="flex gap-2 text-sm">
+                                        <span className="text-gray-500">Doctor Experience:</span>
+                                        <span className="text-gray-500">{doctor.experience || "N/A"}</span>
+                                    </div>
+                                    <div className="flex gap-2 text-sm">
+                                        <span className="text-gray-500">Doctor Description:</span>
+                                        <span className="text-gray-500">{doctor.description || "N/A"}</span>
+                                    </div>
+                                    <div className="flex gap-2 text-sm">
+                                        <span className="text-gray-500">Doctor Specialization:</span>
+                                        <span className="text-gray-500">{doctor.specialization || "N/A"}</span>
+                                    </div>
+                                    <div className="flex gap-2 text-sm">
+                                        <span className="text-gray-500">Doctor Status:</span>
+                                        <span className="text-gray-500">{doctor.status || "N/A"}</span>
+                                    </div>
                                 </div>
                             </div>
                         ))}
@@ -321,7 +363,7 @@ const UserSidebar = () => {
                         >
                             <FaTimes size={24} />
                         </button>
-                        <h2 className="text-lg font-bold mb-4">All Prescriptions</h2>
+                        <h2 className="text-lg text-black font-bold mb-4">All Prescriptions</h2>
                         {prescriptions.map((prescription) => (
                             <div
                                 key={prescription.id}
@@ -427,7 +469,6 @@ const UserSidebar = () => {
                             </div>
                             {error && <p className="text-red-500 text-sm">{error}</p>}
                             <button
-                                // onClick={handleUpdateUser}
                                 className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
                             >
                                 Save Changes
@@ -437,11 +478,8 @@ const UserSidebar = () => {
                 </div>
             )}
 
-
-
-
         </div>
     );
 };
 
-export default UserSidebar;
+export default AdminSidebar;

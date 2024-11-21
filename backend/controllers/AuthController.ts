@@ -80,7 +80,7 @@ export const loginUser = async (
     });
 
     if (!user) {
-      return next(new AppError("User not found", 401));
+      return next(new AppError("User not found", 404));
     }
 
     const isMatch = await bcrypt.compare(password, user.password);

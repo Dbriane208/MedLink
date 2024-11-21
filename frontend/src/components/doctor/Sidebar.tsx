@@ -6,67 +6,54 @@ import { FaPrescriptionBottleMedical } from "react-icons/fa6";
 import { LuHelpCircle, LuLogOut } from "react-icons/lu";
 import { FaTimes } from "react-icons/fa";
 import { useMutation } from "@tanstack/react-query";
-import { deleteAppointmentId, getAppointmentByUserId, getPrescriptionsByUserId, getUserbyId, } from "../../api/Api";
+import { getAppointmentByDoctorId, getDoctorbyId, getPrescriptionsByDoctorId } from "../../api/Api";
 import { handleAxiosError } from "../../utils/AxiosError";
 import { formatDate } from "../../utils/FormatDate";
-import { Appointment, Prescription, User } from "../../api/ModelInterfaces";
-import { checkAuthAndGetUserId } from "../../utils/CurrentUser";
+import { Appointment, Doctor, Prescription } from "../../api/ModelInterfaces";
+import { checkAuthAndGetDocId } from "../../utils/CurrentUser";
 import { useNavigate } from "react-router-dom";
 
-const UserSidebar = () => {
+const DoctorsSidebar = () => {
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
-    const [error, ] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [showAppointments, setShowAppointments] = useState(false);
     const [showPrescriptions, setShowPrescriptions] = useState(false);
-    const [, setUserId] = useState<number | null>(null);
-    const [user, setUser] = useState<User>();
+    const [_, setUserId] = useState<number | null>(null);
+    const [doctor, setDoctor] = useState<Doctor>();
     const [showPopup, setShowPopup] = useState(false);
     const [name, setName] = useState<string>('');
     const [email, setEmail] = useState<string>('');
     const navigate = useNavigate();
 
-    const getUser = useMutation({
-        mutationFn: (id: number) => getUserbyId(id),
+
+    const getDoctor = useMutation({
+        mutationFn: (id: number) => getDoctorbyId(id),
         onSuccess: (data: any) => {
-            console.log("User data", data)
-            setUser(data)
+            console.log("Doctor data", data)
+            setDoctor(data)
+            setError(null)
         },
         onError: (error: any) => {
             const errData = handleAxiosError(error);
             const errorMessage = typeof errData === "string" ? errData : "An unknown error occurred.";
-            console.log("Error on home",errorMessage);
+            console.log("error", errorMessage);
             setLoading(false);
         }
     });
 
-    // const updateUser = useMutation({
-    //     mutationFn: ({ userData, userId }: { userData: UpdateUserNameAndPassword; userId: number }) => 
-    //         updateUserNameAndEmailById(userData, userId),
-    //     onSuccess: (data: User) => {
-    //         setUser(data); 
-    //         setShowPopup(false); 
-    //         setError(null);
-    //         setLoading(false);
-    //     },
-    //     onError: (error: any) => {
-    //         const errData = handleAxiosError(error);
-    //         const errorMessage = typeof errData === "string" ? errData : "An unknown error occurred.";
-    //         setError(errorMessage);
-    //         setLoading(false);
-    //     }
-    // });
-
     const mutation = useMutation({
-        mutationFn: (id: number) => getAppointmentByUserId(id),
+        mutationFn: (id: number) => getAppointmentByDoctorId(id),
         onSuccess: (data: any) => {
+            console.log("Appointment data", data)
             const appointmentArray = Array.isArray(data) ? data :
                 (data?.data ? (Array.isArray(data.data) ? data.data : []) : []);
 
             if (appointmentArray.length > 0) {
                 setAppointments(appointmentArray);
                 console.log("Appointments fetched successfully", appointmentArray);
+                // setError(null);
             } else {
                 console.error("No appointment data found");
             }
@@ -75,13 +62,14 @@ const UserSidebar = () => {
         onError: (error: any) => {
             const errData = handleAxiosError(error);
             const errorMessage = typeof errData === "string" ? errData : "An unknown error occurred.";
+            console.log("error", errorMessage);
             console.error("Error fetching appointments:", errorMessage);
             setLoading(false);
         }
     });
 
     const mutPrescription = useMutation({
-        mutationFn: (userId: number) => getPrescriptionsByUserId(userId),
+        mutationFn: (id: number) => getPrescriptionsByDoctorId(id),
         onSuccess: (data: any) => {
             const prescriptionArray = Array.isArray(data) ? data :
                 (data?.data ? (Array.isArray(data.data) ? data.data : []) : []);
@@ -91,40 +79,26 @@ const UserSidebar = () => {
                 console.log("Prescriptions fetched successfully", prescriptionArray);
             } else {
                 console.error("No prescription data found");
-                // setError("No prescription available");
             }
             setLoading(false);
         },
         onError: (error: any) => {
             const errData = handleAxiosError(error);
             const errorMessage = typeof errData === "string" ? errData : "An unknown error occurred.";
+            console.log("error", errorMessage);
             console.error("Error fetching prescriptions:", errorMessage);
             setLoading(false);
         }
     });
 
-    const deleteAppointment = useMutation({
-        mutationFn: (appId: number) => deleteAppointmentId(appId),
-        onSuccess: (data: any) => {
-            setAppointments(data)
-            console.log("Appointment deleted successfully")
-        },
-        onError: () => {
-            const errData = handleAxiosError(error);
-            const errorMessage = typeof errData === "string" ? errData : "An unknown error occurred.";
-            console.error("Error fetching prescriptions:", errorMessage);
-            setLoading(false);
-        }
-    })
-
     useEffect(() => {
         setLoading(true);
-        const id = checkAuthAndGetUserId();
+        const id = checkAuthAndGetDocId();
 
         if (id) {
             console.log(id);
             setUserId(id);
-            getUser.mutate(id);
+            getDoctor.mutate(id);
         }
 
         Promise.all([
@@ -135,27 +109,11 @@ const UserSidebar = () => {
         });
     }, []);
 
-    const handleDeleteAppointment = (app: Appointment) => {
-        deleteAppointment.mutate(app.id);
-      };
-
-    // const handleUpdateUser = () => {
-    //     const id = checkAuthAndGetUserId();
-    //     setUserId(id)
-
-    //     if (!name || !email) {
-    //         setError("Please fill in all required fields.");
-    //         return;
-    //     }
-    //     setLoading(true);
-    //     updateUser.mutate({ email, name }, userId);
-    // };
-
     const handleCloseAppointments = () => setShowAppointments(false);
     const handleClosePrescriptions = () => setShowPrescriptions(false);
 
     const handleLogout = () => {
-        const token = localStorage.removeItem("token")
+        const token = localStorage.removeItem("doctor")
         console.log("logout token", token);
 
         navigate("/login")
@@ -176,7 +134,7 @@ const UserSidebar = () => {
                     <div className="flex flex-col justify-center relative">
                         <div className="flex items-center justify-center">
                             <img
-                                src={user?.data.profilePic}
+                                src={doctor?.data.profilePic}
                                 alt="profile picture"
                                 className="w-24 h-24 rounded-full mb-6 shadow-lg object-cover border-4 border-blue-100"
                             />
@@ -197,16 +155,16 @@ const UserSidebar = () => {
 
                             <div className="flex gap-2 text-sm">
                                 <span className="font-bold text-gray-700">Name:</span>
-                                <span className="text-gray-600">{user?.data.name || "N/A"}</span>
+                                <span className="text-gray-600">{doctor?.data.name || "N/A"}</span>
                             </div>
 
                             <div className="flex gap-2 text-sm">
                                 <span className="font-bold text-gray-700">Email:</span>
                                 <span
                                     className="text-gray-600 truncate max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap"
-                                    title={user?.data.email}
+                                    title={doctor?.data.email}
                                 >
-                                    {user?.data.email || "N/A"}
+                                    {doctor?.data.email || "N/A"}
                                 </span>
                             </div>
 
@@ -218,9 +176,7 @@ const UserSidebar = () => {
                             </button>
                         </div>
                     </div>
-
                 </div>
-
 
                 <div className="mt-6">
                     <p className="text-gray-500 font-[400] text-sm mb-2">General</p>
@@ -278,32 +234,38 @@ const UserSidebar = () => {
                         >
                             <FaTimes size={24} />
                         </button>
-                        <h2 className="text-lg font-bold mb-4">All Appointments</h2>
+                        <h2 className="text-lg text-black font-bold mb-4">All Appointments</h2>
                         {appointments.map((appointment) => (
                             <div
                                 key={appointment.id}
                                 className="border-b border-gray-200 py-4 flex items-center justify-between"
                             >
-                                <div className="flex flex-col">
-                                    <div className="flex gap-2 text-sm">
-                                        <span className="text-gray-500">Patient Name:</span>
-                                        <span className="text-gray-500">{user?.data.name || "N/A"}</span>
-                                    </div>
-                                    <div className="flex gap-2 text-sm">
-                                        <span className="text-gray-500">Doctor Name:</span>
-                                        <span className="text-gray-500">{appointment.doctor?.name || "N/A"}</span>
-                                    </div>
-                                    <div className="flex gap-2 text-sm">
-                                        <span className="text-gray-500">Time:</span>
-                                        <span className="text-gray-500">{formatDate(new Date(appointment.date))}</span>
+                                <div className="flex space-x-2">
+                                    <img
+                                        src={appointment.user.profilePic}
+                                        alt={`${appointment.user.name}'s profile`}
+                                        className="w-24 h-24 rounded-full mb-6 shadow-lg object-cover border-4 border-blue-100"
+                                    />
+                                    <div className="flex flex-col mt-5">
+                                        <div className="flex gap-2 text-sm">
+                                            <span className="font-bold text-gray-500">Patient Name:</span>
+                                            <span className="text-gray-500">{appointment.user.name}</span>
+                                        </div>
+                                        <div className="flex gap-2 text-sm">
+                                            <span className="font-bold text-gray-500">Patient Email:</span>
+                                            <span className="text-gray-500">{appointment.user.email}</span>
+                                        </div>
+                                        <div className="flex gap-2 text-sm">
+                                            <span className="font-bold text-gray-500">Patient Date:</span>
+                                            <span className="text-gray-500">{formatDate(new Date(appointment.date))}</span>
+                                        </div>
                                     </div>
                                 </div>
 
                                 <div className="flex gap-3">
                                     <button className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">Update</button>
                                     <button
-                                    onClick={handleDeleteAppointment}
-                                     className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                                        className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
                                     >Delete</button>
                                 </div>
                             </div>
@@ -321,27 +283,30 @@ const UserSidebar = () => {
                         >
                             <FaTimes size={24} />
                         </button>
-                        <h2 className="text-lg font-bold mb-4">All Prescriptions</h2>
+                        <h2 className="text-lg text-black font-bold mb-4">All Prescriptions</h2>
                         {prescriptions.map((prescription) => (
                             <div
                                 key={prescription.id}
                                 className="border-b border-gray-200 py-4"
                             >
                                 <div className="flex justify-between items-start mb-4">
-                                    <div className="flex flex-col">
-                                        <div className="flex gap-2 text-sm">
-                                            <span className="text-gray-500">Patient Name:</span>
-                                            <span className="text-gray-500">{user?.data.name}</span>
-                                        </div>
-                                        <div className="flex gap-2 text-sm">
-                                            <span className="text-gray-500">Doctor Name:</span>
-                                            <span className="text-gray-500">{prescription.doctor.name}</span>
-                                        </div>
-                                        <div className="flex gap-2 text-sm">
-                                            <span className="text-gray-500">Prescribed Date:</span>
-                                            <span className="text-gray-500">
-                                                {formatDate(new Date(prescription.prescribedAt))}
-                                            </span>
+                                    <div className="flex space-x-3">
+                                        <img
+                                            src={prescription.patient.profilePic}
+                                            alt={`${prescription.patient.name}'s profile`}
+                                            className="w-24 h-24 rounded-full mb-6 shadow-lg object-cover border-4 border-blue-100"
+                                        />
+                                        <div className="flex flex-col mt-5">
+                                            <div className="flex gap-2 text-sm">
+                                                <span className="text-gray-500">Patient Name:</span>
+                                                <span className="text-gray-500">{prescription.patient.name}</span>
+                                            </div>
+                                            <div className="flex gap-2 text-sm">
+                                                <span className="text-gray-500">Prescribed Date:</span>
+                                                <span className="text-gray-500">
+                                                    {formatDate(new Date(prescription.prescribedAt))}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -436,12 +401,8 @@ const UserSidebar = () => {
                     </div>
                 </div>
             )}
-
-
-
-
         </div>
     );
 };
 
-export default UserSidebar;
+export default DoctorsSidebar;

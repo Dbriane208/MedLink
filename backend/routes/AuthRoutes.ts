@@ -32,7 +32,7 @@ router.patch("/update&password", protect, updatePassword);
 router.get("/", protect, restrictTo("admin"), getAllUsers);
 router
   .route("/:id")
-  .get(protect, restrictTo("admin"), getUserById)
+  .get(protect,getUserById)
   .patch(protect, updateUserById)
   .delete(protect, restrictTo("admin"), deleteUserById)
 
