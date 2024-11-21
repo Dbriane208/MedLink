@@ -33,6 +33,7 @@ export const getAllDoctors = async (req: Request, res: Response, next: NextFunct
         });
 
     } catch (err) {
+        console.log("doc",err);
         return next(new AppError("Error getting doctors", 500));
     }
 }
