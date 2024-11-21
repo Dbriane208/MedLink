@@ -16,7 +16,7 @@ router.route("/user/:id")
 .get(protect, getAppointmentsByUserId)
 
 router.route("/doctor/:id")
-.get(protect, getAppointmentsByDoctorId)
+.get(getAppointmentsByDoctorId)
 
 export default router
 

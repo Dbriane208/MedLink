@@ -1,13 +1,13 @@
 import Doctors from "../../components/home/Doctor";
 import ResponsiveSearchbar from "../../components/home/Searchbar";
-import ResponsiveSidebar from "../../components/home/Sidebar";
+import UserSidebar from "../../components/home/Sidebar";
 
 const HomePage = () => {
     return (
         <div className="fixed inset-0 flex w-full h-full bg-gradient-to-b from-blue-50 to-white">
             {/* Sidebar - Fixed on the left */}
             <div className="h-full w-64 flex-shrink-0 border-r border-gray-200">
-                <ResponsiveSidebar />
+                <UserSidebar />
             </div>
 
             {/* Main Content Area */}

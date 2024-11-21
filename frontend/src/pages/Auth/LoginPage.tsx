@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { MdOutlineMail } from "react-icons/md";
 import { RiLockPasswordLine } from "react-icons/ri";
 import { useNavigate } from "react-router-dom";
-import { loginUser } from "../../api/Api";
+import { loginDoctor, loginUser } from "../../api/Api";
 
 const LoginPage = () => {
   const [email, setEmail] = useState<string>('');
@@ -14,20 +14,13 @@ const LoginPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-
-    if (token) {
-      navigate('/home');
-    }
 
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'token') {
         const newToken = localStorage.getItem('token');
         if (newToken) {
           navigate('/home');
-        } else {
-          navigate('/home');
-        }
+        } 
       }
     };
 
@@ -43,8 +36,9 @@ const LoginPage = () => {
 
     onSuccess: (data: any) => {
       const token = data?.token;
+      const role = data?.data.role;
 
-      if (token) {
+      if (token && role == "user") {
         localStorage.setItem('token', JSON.stringify({ token }));
         setSuccess('Login successful');
         setError('');
@@ -52,21 +46,56 @@ const LoginPage = () => {
         setPassword('');
 
         navigate('/home');
-      } else {
-        setError(data.message);
+      } 
+
+      if(token && role == "admin"){
+        localStorage.setItem('token', JSON.stringify({ token }));
+        setSuccess('Login successful');
+        setError('');
+        setEmail('');
+        setPassword('');
+
+        navigate('/admin')
       }
+
     },
-    onError: (error: any) => {
-      setError(error?.response?.data?.message || 'Login failed. Please try again.');
+    onError: () => {
+      setError('Login failed. Check credentials. Please try again.');
       setSuccess('');
     },
   });
+
+  const docMutation = useMutation({
+    mutationFn: loginDoctor,
+    onSuccess: (data: any) => {
+      const token = data?.token;
+      console.log("Doc token", token)
+      const role = data?.data.role;
+
+      if (token && role == "doctor") {
+        localStorage.setItem('doctor', JSON.stringify({ token }));
+        setSuccess('Login successful');
+        setError('');
+        setEmail('');
+        setPassword('');
+
+        navigate('/doctor');
+      }
+
+    },
+    onError: (error: any) => {
+      setError('Login failed. Check credentials. Please try again.');
+      console.log("Doctor error", error)
+      setSuccess('');
+    }
+  })
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError('');
     setSuccess('');
     mutation.mutate({ email, password });
+    docMutation.mutate({email,password});
   };
 
   return (

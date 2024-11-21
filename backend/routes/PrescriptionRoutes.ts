@@ -5,7 +5,7 @@ import { protect, restrictTo } from "../middlewares/AuthMiddleware";
 const router = Router();
 
 router.route("/")
-.get(protect,getAllPrescriptions)
+.get(getAllPrescriptions)
 .post(protect,createPrescription)
 
 router.route("/:id")
@@ -16,6 +16,6 @@ router.route("/user/:id")
 .get(protect,getPrescriptionByUserId)
 
 router.route("/doctor/:id")
-.get(protect,getPrescriptionByDoctorId)
+.get(getPrescriptionByDoctorId)
 
 export default router

@@ -53,6 +53,48 @@ export const createDoctor = async (req: Request, res: Response, next: NextFuncti
     }
 }
 
+export const loginDoctor = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { email, password} = req.body;
+
+        const doctor = await prisma.doctor.findFirst({
+            where: { email },
+            select: {
+                name: true,
+                password: true,
+                role: true,
+                id: true
+            }
+        });
+
+        if(!doctor) return next(new AppError("Doctor not found", 404));
+
+        const token = jwt.sign({id: doctor?.id}, process.env.JWT_TOKEN!, {
+            expiresIn: "10d",
+        });
+
+        const isMatch = await bcrypt.compare(password, doctor!.password);
+        if (!isMatch) {
+         return next(new AppError("Oops! You entered the wrong password", 401));
+        }
+
+        res.status(200).json({
+            status: "success",
+            message: "Logged in successfully",
+            token: token,
+            data: {
+                name: doctor.name,
+                role: doctor.role,
+                id: doctor.id
+            }
+        });
+
+    } catch (err) {
+        console.log(err);
+        return next(new AppError("Error logging a doctor", 500))
+    }
+}
+
 export const getDoctorBySpecialization = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { name } = req.params;
@@ -157,7 +199,7 @@ export const deleteDoctorById = async (req: Request, res: Response,  next: NextF
     try {
         const docId = parseInt(req.params.id);
 
-        const doctor = await prisma.doctor.findFirst({where: {id: docId}})
+        const doctor = await prisma.doctor.findUnique({where: {id: docId}})
 
         if(!doctor) {
             return next(new AppError("Doctor not found", 404));
