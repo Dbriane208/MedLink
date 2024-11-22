@@ -80,7 +80,7 @@ export default function Doctors() {
     useEffect(() => {
         setLoading(true);
         mutation.mutate();
-    }, []);
+    }, [mutation,appointmentMutation]);
 
     const handleBookNow = (doctor: Doctor) => {
         setSelectedDoctor(doctor);
