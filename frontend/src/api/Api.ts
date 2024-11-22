@@ -27,6 +27,15 @@ interface Appointment {
     date: Date
 }
 
+interface DoctorData {
+    name: string;
+    email: string;
+    password: string;
+    description: string;
+    specialization: string;
+    experience: string;
+}
+
 export const registerUser = async (userData: RegisterUserData): Promise<any> => {
     try {
         const url = `${BASE_URL}/users/register`;
@@ -61,6 +70,35 @@ export const loginUser = async (userData: LoginUserData): Promise<any> => {
         const er = handleAxiosError(err)
         if(er) {
             console.log("Error Logging in User:", er);
+        }
+    }
+}
+
+// get all users
+export const getAllUsers = async (): Promise<any> => {
+    try {
+        const token: any = localStorage.getItem("token");
+
+        if(!token) {
+            console.log("No token found in local storage");
+        }
+
+        const usertoken = JSON.parse(token)
+
+        const url = `${BASE_URL}/users`
+
+        const response = await axios.get(url, {
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${usertoken.token}`
+            }
+        });
+
+        return response.data
+    } catch (err) {
+        const er = handleAxiosError(err)
+        if(er) {
+            console.log("Error getting users:", er);
         }
     }
 }
@@ -405,6 +443,35 @@ export const getDoctorbyId = async (docId: number): Promise<any> => {
         const er = handleAxiosError(err)
         if(er) {
             console.log("Error getting the Doctor:", er);
+        }
+    }
+}
+
+// create a doctor
+export const createDoctor = async (doctor: DoctorData) => {
+    try {
+        const token: any = localStorage.getItem("token");
+
+        if(!token) {
+            console.log("No token found in local storage");
+        }
+
+        const usertoken = JSON.parse(token)
+
+        const url = `${BASE_URL}/doctors`;
+
+        const response = await axios.post(url, doctor, {
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${usertoken.token}`
+            }
+        });
+
+        return response.data;
+    } catch (err) {
+        const er = handleAxiosError(err)
+        if(er) {
+            console.log("Error registering in doctor:", er);
         }
     }
 }

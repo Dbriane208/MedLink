@@ -1,12 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
-import { MdSchedule } from "react-icons/md";
 import { IoSettingsOutline } from "react-icons/io5";
 import { FaPrescriptionBottleMedical, FaUserDoctor } from "react-icons/fa6";
 import { LuHelpCircle, LuLogOut } from "react-icons/lu";
 import { FaTimes } from "react-icons/fa";
 import { useMutation } from "@tanstack/react-query";
-import { getAppointments, getDoctors, getPrescriptions, getUserbyId} from "../../api/Api";
+import { createDoctor, getAppointments, getDoctors, getPrescriptions, getUserbyId } from "../../api/Api";
 import { handleAxiosError } from "../../utils/AxiosError";
 import { formatDate } from "../../utils/FormatDate";
 import { Appointment, Doctor, Prescription, User } from "../../api/ModelInterfaces";
@@ -22,11 +21,16 @@ const AdminSidebar = () => {
     const [showAppointments, setShowAppointments] = useState(false);
     const [showPrescriptions, setShowPrescriptions] = useState(false);
     const [showDoctors, setShowDoctors] = useState(false);
-    const [_, setUserId] = useState<number | null>(null);
+    const [userId, setUserId] = useState<number | null>(null);
     const [user, setUser] = useState<User>();
     const [showPopup, setShowPopup] = useState(false);
     const [name, setName] = useState<string>('');
     const [email, setEmail] = useState<string>('');
+    const [description, setDescription] = useState<string>('');
+    const [specialization, setSpecialization] = useState<string>('');
+    const [experience, setExperience] = useState<string>('');
+    const [password, setPassword] = useState<string>('');
+    const [showDoctorForm, setShowDoctorForm] = useState(false);
     const navigate = useNavigate();
 
 
@@ -117,6 +121,32 @@ const AdminSidebar = () => {
         }
     });
 
+    const doctorMutation = useMutation({
+        mutationFn: createDoctor,
+        onSuccess: (data: any) => {
+            console.log("Doctor created successfully", data);
+            setLoading(false);
+            setShowDoctorForm(false);
+            // Clear form fields
+            setName('');
+            setEmail('');
+            setPassword('');
+            setDescription('');
+            setSpecialization('');
+            setExperience('');
+            setError(null);
+            // Refresh doctors list
+            mutDoctors.mutate();
+        },
+        onError: (error: any) => {
+            console.log("Doctor not created", error);
+            const errData = handleAxiosError(error);
+            const errorMessage = typeof errData === "string" ? errData : "An unknown error occurred.";
+            setError(errorMessage);
+            setLoading(false);
+        },
+    });
+
     useEffect(() => {
         setLoading(true);
         const id = checkAuthAndGetUserId();
@@ -130,15 +160,15 @@ const AdminSidebar = () => {
         Promise.all([
             mutPrescription.mutate(id),
             mutation.mutate(id),
-            mutDoctors.mutate()
+            mutDoctors.mutate(),
         ]).finally(() => {
             setLoading(false);
         });
-    }, []);
+    }, [userId]);
 
     const handleCloseAppointments = () => setShowAppointments(false);
     const handleClosePrescriptions = () => setShowPrescriptions(false);
-    const handleCloseDoctors = () => setShowDoctors(false)
+    const handleCloseDoctors = () => setShowDoctors(false);
 
     const handleLogout = () => {
         const token = localStorage.removeItem("token")
@@ -146,6 +176,31 @@ const AdminSidebar = () => {
 
         navigate("/login")
     }
+    const handleDoctor = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+
+        if (!name || !email || !description || !specialization || !experience || !password) {
+            setError("Please fill in all required fields.");
+            return;
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            setError("Please enter a valid email address.");
+            return;
+        }
+
+        setLoading(true);
+        doctorMutation.mutate({
+            name,
+            email,
+            password,
+            description,
+            specialization,
+            experience
+        });
+    };
 
     if (loading) {
         return <div>Loading...</div>;
@@ -211,14 +266,6 @@ const AdminSidebar = () => {
                 <div className="mt-6">
                     <p className="text-gray-500 font-[400] text-sm mb-2">General</p>
                     <div className="flex flex-col gap-3">
-                        {/* All Appointments */}
-                        <div
-                            className="flex items-center gap-4 hover:bg-gray-50 p-2 rounded-md cursor-pointer"
-                            onClick={() => setShowAppointments(true)}
-                        >
-                            <MdSchedule className="text-xl text-gray-800" />
-                            <p className="text-sm font-medium text-gray-800">All Appointments</p>
-                        </div>
 
                         {/* All Prescriptions */}
                         <div
@@ -229,17 +276,16 @@ const AdminSidebar = () => {
                             <p className="text-sm font-medium text-gray-800">All Prescriptions</p>
                         </div>
 
-                         {/* All Doctors */}
-                         <div
+                        {/* Add Doctors */}
+                        <div
                             className="flex items-center gap-4 hover:bg-gray-50 p-2 rounded-md cursor-pointer"
-                            onClick={() => setShowDoctors(true)}
+                            onClick={() => setShowDoctorForm(true)}
                         >
                             <FaUserDoctor className="text-xl text-gray-800" />
-                            <p className="text-sm font-medium text-gray-800">All Doctors</p>
+                            <p className="text-sm font-medium text-gray-800">Add Doctors</p>
                         </div>
                     </div>
                 </div>
-
 
                 <div className="mt-auto">
                     <p className="text-gray-500 font-[400] text-sm mb-2">Support</p>
@@ -254,9 +300,9 @@ const AdminSidebar = () => {
                         </div>
                         <div className="flex items-center gap-4 hover:bg-gray-50 p-2 rounded-md cursor-pointer">
                             <LuLogOut className="text-xl text-gray-800" />
-                            <p 
-                            onClick={handleLogout}
-                            className="text-sm font-medium text-gray-800"
+                            <p
+                                onClick={handleLogout}
+                                className="text-sm font-medium text-gray-800"
                             >Logout</p>
                         </div>
                     </div>
@@ -297,7 +343,7 @@ const AdminSidebar = () => {
                                 <div className="flex gap-3">
                                     <button className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">Update</button>
                                     <button
-                                     className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                                        className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
                                     >Delete</button>
                                 </div>
                             </div>
@@ -306,7 +352,7 @@ const AdminSidebar = () => {
                 </div>
             )}
 
-             {/* Pop-up Card */}
+            {/* Pop-up Card */}
             {showDoctors && (
                 <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white w-11/12 md:w-1/2 max-h-[80%] overflow-y-auto rounded-md shadow-lg p-6 relative">
@@ -477,6 +523,92 @@ const AdminSidebar = () => {
                     </div>
                 </div>
             )}
+
+            {showDoctorForm && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white w-11/12 md:w-1/3 rounded-md shadow-lg p-6 relative">
+                        <button
+                            className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+                            onClick={() => setShowDoctorForm(false)}
+                        >
+                            <FaTimes size={24} />
+                        </button>
+                        <h2 className="text-lg font-bold mb-4 text-gray-800">Add New Doctor</h2>
+                        <form className="flex flex-col gap-4" onSubmit={handleDoctor}>
+                            <div>
+                                <label className="text-sm text-gray-600 mb-1 block">Name</label>
+                                <input
+                                    type="text"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    placeholder="Enter doctor's name"
+                                    className="w-full p-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-200"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-sm text-gray-600 mb-1 block">Email</label>
+                                <input
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    placeholder="Enter doctor's email"
+                                    className="w-full p-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-200"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-sm text-gray-600 mb-1 block">Password</label>
+                                <input
+                                    type="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    placeholder="Enter doctor's default password"
+                                    className="w-full p-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-200"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-sm text-gray-600 mb-1 block">Description</label>
+                                <textarea
+                                    value={description}
+                                    onChange={(e) => setDescription(e.target.value)}
+                                    placeholder="Enter doctor's description"
+                                    className="w-full p-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-200"
+                                    rows={3}
+                                />
+                            </div>
+                            <div>
+                                <label className="text-sm text-gray-600 mb-1 block">Specialization</label>
+                                <input
+                                    type="text"
+                                    value={specialization}
+                                    onChange={(e) => setSpecialization(e.target.value)}
+                                    placeholder="Enter doctor's specialization"
+                                    className="w-full p-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-200"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-sm text-gray-600 mb-1 block">Experience (in years)</label>
+                                <input
+                                    type="number"
+                                    value={experience}
+                                    onChange={(e) => setExperience(e.target.value)}
+                                    placeholder="Enter doctor's experience"
+                                    min="0"
+                                    className="w-full p-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-200"
+                                />
+                            </div>
+                            {error && <p className="text-red-500 text-sm">{error}</p>}
+                            <button
+                                className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 disabled:bg-blue-300"
+                                type="submit"
+                                disabled={loading}
+                            >
+                                {loading ? 'Creating...' : 'Create Doctor'}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
 
         </div>
     );

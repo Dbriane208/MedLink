@@ -10,6 +10,7 @@ export interface User {
     loggedOut: boolean;
     createdAt: string;
     updatedAt: string;
+    data: User
 }
 
 export interface Doctor {
@@ -21,6 +22,7 @@ export interface Doctor {
     profilePic: string;
     status: string;
     experience: string;
+    data: Doctor
 }
 
 export interface Appointment {

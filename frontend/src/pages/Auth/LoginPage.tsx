@@ -14,7 +14,6 @@ const LoginPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'token') {
         const newToken = localStorage.getItem('token');
@@ -33,10 +32,11 @@ const LoginPage = () => {
 
   const mutation = useMutation({
     mutationFn: loginUser,
-
     onSuccess: (data: any) => {
       const token = data?.token;
+      console.log("token",token);
       const role = data?.data.role;
+      console.log("role",role);
 
       if (token && role == "user") {
         localStorage.setItem('token', JSON.stringify({ token }));
@@ -57,8 +57,8 @@ const LoginPage = () => {
 
         navigate('/admin')
       }
-
     },
+
     onError: () => {
       setError('Login failed. Check credentials. Please try again.');
       setSuccess('');
@@ -97,6 +97,9 @@ const LoginPage = () => {
     mutation.mutate({ email, password });
     docMutation.mutate({email,password});
   };
+
+  // Determine if either mutation is loading
+  const isLoading = mutation.isPending || docMutation.isPending;
 
   return (
     <div className="flex items-center justify-center h-screen w-screen bg-gray-100">
@@ -142,9 +145,14 @@ const LoginPage = () => {
           <div className="w-full relative my-2">
             <button
               type="submit"
-              className="w-full py-3 border border-[#3B9DF8] bg-[#3B9DF8] text-[#ffffff] hover:bg-[#ffffff] hover:text-[#3B9DF8] transition duration-300 rounded-md disabled:opacity-50"
+              disabled={isLoading}
+              className="w-full py-3 border border-[#3B9DF8] bg-[#3B9DF8] text-[#ffffff] hover:bg-[#ffffff] hover:text-[#3B9DF8] transition duration-300 rounded-md disabled:opacity-50 flex justify-center items-center"
             >
-              Login
+              {isLoading ? (
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              ) : (
+                'Login'
+              )}
             </button>
           </div>
         </form>
@@ -160,7 +168,6 @@ const LoginPage = () => {
         </p>
       </div>
     </div>
-
   );
 };
 

@@ -125,9 +125,14 @@ const RegisterPage = () => {
                     <div className="w-full relative my-2">
                         <button
                             type="submit"
-                            className="w-full py-3 border border-[#3B9DF8] bg-[#3B9DF8] text-[#ffffff] hover:bg-[#ffffff] hover:text-[#3B9DF8] transition duration-300 rounded-md disabled:opacity-50"
+                            disabled={mutation.isPending}
+                            className="w-full py-3 border border-[#3B9DF8] bg-[#3B9DF8] text-[#ffffff] hover:bg-[#ffffff] hover:text-[#3B9DF8] transition duration-300 rounded-md disabled:opacity-50 flex justify-center items-center"
                         >
-                            Register
+                            {mutation.isPending ? (
+                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                            ) : (
+                                'Register'
+                            )}
                         </button>
                     </div>
                 </form>
@@ -142,7 +147,6 @@ const RegisterPage = () => {
                 </p>
             </div>
         </div>
-
     );
 };
 
