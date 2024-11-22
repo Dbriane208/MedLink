@@ -22,6 +22,7 @@ export interface Doctor {
     profilePic: string;
     status: string;
     experience: string;
+    data: Doctor
 }
 
 export interface Appointment {
