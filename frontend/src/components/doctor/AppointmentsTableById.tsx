@@ -7,10 +7,11 @@ import { IoEyeOutline } from "react-icons/io5";
 import { IoIosArrowDown } from "react-icons/io";
 import { getAppointmentByDoctorId } from "../../api/Api";
 import { useMutation } from "@tanstack/react-query";
-import { Appointment } from "../../api/ModelInterfaces";
+import { Appointment, Doctor } from "../../api/ModelInterfaces";
 import { handleAxiosError } from "../../utils/AxiosError";
+import { checkAuthAndGetDocId } from "../../utils/CurrentUser";
 
-const AppointmentsTableById = ({ doctorId }: { doctorId: number }) => {
+const AppointmentsTableById = () => {
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -20,7 +21,15 @@ const AppointmentsTableById = ({ doctorId }: { doctorId: number }) => {
     const [pageSize, setPageSize] = useState(10);
     const [openActionMenuId, setOpenActionMenuId] = useState<number | null>(null);
     const [isOpen, setIsOpen] = useState(false);
+    const [docId, setDocId] = useState<Doctor | any>()
     const selectRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const id = checkAuthAndGetDocId();
+        if (id) {
+            setDocId(id);
+        }
+    }, []);
 
     const mutation = useMutation({
         mutationFn: (id: number) => getAppointmentByDoctorId(id),
@@ -49,8 +58,8 @@ const AppointmentsTableById = ({ doctorId }: { doctorId: number }) => {
 
     useEffect(() => {
         setLoading(true);
-        mutation.mutate(doctorId);
-    }, [doctorId]);
+        mutation.mutate(docId);
+    }, []);
 
     // Rest of the component remains the same
     const filteredData = useMemo(() => {

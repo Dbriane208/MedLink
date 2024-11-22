@@ -1,4 +1,4 @@
-import AppointmentsTable from "../../components/admin/AppointmentsTable";
+import AppointmentsTableById from "../../components/doctor/AppointmentsTableById";
 import DoctorsSidebar from "../../components/doctor/Sidebar";
 
 const DoctorsPage = () => {
@@ -13,7 +13,7 @@ const DoctorsPage = () => {
             <div className="flex-1 flex flex-col w-full">
                 {/* Testimonials Section */}
                 <div className="flex-1 w-full overflow-y-auto">
-                    <AppointmentsTable />
+                    <AppointmentsTableById />
                 </div>
             </div>
         </div>
