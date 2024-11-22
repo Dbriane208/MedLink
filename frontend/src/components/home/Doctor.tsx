@@ -22,7 +22,7 @@ export default function Doctors() {
         }
     }, []);
 
-    const mutation = useMutation({
+    const {mutate: fetchDoctors} = useMutation({
         mutationFn: getDoctors,
         onSuccess: (data: any) => {
             const doctorsArray = Array.isArray(data)
@@ -79,8 +79,8 @@ export default function Doctors() {
 
     useEffect(() => {
         setLoading(true);
-        mutation.mutate();
-    }, [mutation,appointmentMutation]);
+        fetchDoctors();
+    }, [fetchDoctors]);
 
     const handleBookNow = (doctor: Doctor) => {
         setSelectedDoctor(doctor);
