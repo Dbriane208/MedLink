@@ -28,11 +28,11 @@ export default function Doctors() {
             const doctorsArray = Array.isArray(data)
                 ? data
                 : data?.data
-                ? Array.isArray(data.data)
-                    ? data.data
-                    : []
-                : [];
-            
+                    ? Array.isArray(data.data)
+                        ? data.data
+                        : []
+                    : [];
+
             if (doctorsArray.length > 0) {
                 setDoctors(doctorsArray);
                 setError(null);
@@ -52,7 +52,7 @@ export default function Doctors() {
     const appointmentMutation = useMutation({
         mutationFn: createAppointment,
         onSuccess: (data: any) => {
-            console.log("Appointment successfull",data);
+            console.log("Appointment successfull", data);
             setLoading(false);
             setShowPopup(false);
         },
@@ -125,18 +125,24 @@ export default function Doctors() {
                                     />
                                 </div>
 
-                                <div className="space-y-2">
+                                <div className="space-y-1 mb-3">
                                     <h3 className="text-xl font-bold text-gray-900">{doctor.name}</h3>
-                                    <span className="inline-flex px-3 py-1 rounded-full text-sm text-black font-medium">
-                                        {doctor.specialization}
-                                    </span>
+                                    <span className={`px-2 py-1 rounded-full text-xs ${doctor.status.toLowerCase() === 'available'
+                                        ? 'bg-green-100 text-green-800'
+                                        : 'bg-red-100 text-red-800'
+                                    }`}>
+                                    {doctor.specialization}
+                                </span>
                                 </div>
 
-                                <p className="text-gray-600 mt-4 mb-6 text-sm leading-relaxed min-h-[80px]">
+                                <span className={`px-2 py-1 mb-3 rounded-full text-xs ${doctor.status.toLowerCase() === 'available'
+                                        ? 'bg-green-100 text-green-800'
+                                        : 'bg-red-100 text-red-800'
+                                    }`}>
                                     {doctor.status}
-                                </p>
+                                </span>
 
-                                <p className="text-gray-600 mt-4 mb-6 text-sm leading-relaxed min-h-[80px]">
+                                <p className="text-gray-600 mb-6 text-sm leading-relaxed min-h-[80px]">
                                     {doctor.description}
                                 </p>
 

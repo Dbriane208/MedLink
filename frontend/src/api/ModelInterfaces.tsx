@@ -10,6 +10,7 @@ export interface User {
     loggedOut: boolean;
     createdAt: string;
     updatedAt: string;
+    data: User
 }
 
 export interface Doctor {

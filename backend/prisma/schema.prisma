@@ -32,12 +32,12 @@ model User {
 model Doctor {
   id             Int            @id @default(autoincrement())
   name           String
-  experience     String         @default("0 years")
-  email          String         
-  password       String    
-  specialization String         @default("General")
+  experience     String        
+  email          String         @unique
+  password       String        
+  specialization String         
   profilePic     String?        @default("https://res.cloudinary.com/di8xlgpwr/image/upload/w_1000,c_fill,ar_1:1,g_auto,r_max,bo_5px_solid_red,b_rgb:262c35/v1731006003/cld-sample.jpg")
-  description    String         @db.VarChar(200)
+  description    String         
   status         String         @default("available")
   role           String         @default("doctor")
   appointments   Appointment[]

@@ -6,7 +6,7 @@ import { FaPrescriptionBottleMedical } from "react-icons/fa6";
 import { LuHelpCircle, LuLogOut } from "react-icons/lu";
 import { FaTimes } from "react-icons/fa";
 import { useMutation } from "@tanstack/react-query";
-import { deleteAppointmentId, getAppointmentByUserId, getPrescriptionsByUserId, getUserbyId, } from "../../api/Api";
+import { getAppointmentByUserId, getPrescriptionsByUserId, getUserbyId, } from "../../api/Api";
 import { handleAxiosError } from "../../utils/AxiosError";
 import { formatDate } from "../../utils/FormatDate";
 import { Appointment, Prescription, User } from "../../api/ModelInterfaces";
@@ -103,19 +103,19 @@ const UserSidebar = () => {
         }
     });
 
-    const deleteAppointment = useMutation({
-        mutationFn: (appId: number) => deleteAppointmentId(appId),
-        onSuccess: (data: any) => {
-            setAppointments(data)
-            console.log("Appointment deleted successfully")
-        },
-        onError: () => {
-            const errData = handleAxiosError(error);
-            const errorMessage = typeof errData === "string" ? errData : "An unknown error occurred.";
-            console.error("Error fetching prescriptions:", errorMessage);
-            setLoading(false);
-        }
-    })
+    // const deleteAppointment = useMutation({
+    //     mutationFn: (appId: number) => deleteAppointmentId(appId),
+    //     onSuccess: (data: any) => {
+    //         setAppointments(data)
+    //         console.log("Appointment deleted successfully")
+    //     },
+    //     onError: () => {
+    //         const errData = handleAxiosError(error);
+    //         const errorMessage = typeof errData === "string" ? errData : "An unknown error occurred.";
+    //         console.error("Error fetching prescriptions:", errorMessage);
+    //         setLoading(false);
+    //     }
+    // })
 
     useEffect(() => {
         setLoading(true);
@@ -135,9 +135,9 @@ const UserSidebar = () => {
         });
     }, []);
 
-    const handleDeleteAppointment = (app: Appointment) => {
-        deleteAppointment.mutate(app.id);
-      };
+    // const handleDeleteAppointment = (app: Appointment) => {
+    //     deleteAppointment.mutate(app.id);
+    //   };
 
     // const handleUpdateUser = () => {
     //     const id = checkAuthAndGetUserId();
@@ -278,7 +278,7 @@ const UserSidebar = () => {
                         >
                             <FaTimes size={24} />
                         </button>
-                        <h2 className="text-lg font-bold mb-4">All Appointments</h2>
+                        <h2 className="text-lg text-black font-bold mb-4">All Appointments</h2>
                         {appointments.map((appointment) => (
                             <div
                                 key={appointment.id}
@@ -302,7 +302,7 @@ const UserSidebar = () => {
                                 <div className="flex gap-3">
                                     <button className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">Update</button>
                                     <button
-                                    onClick={handleDeleteAppointment}
+                                    // onClick={handleDeleteAppointment}
                                      className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
                                     >Delete</button>
                                 </div>
@@ -321,7 +321,7 @@ const UserSidebar = () => {
                         >
                             <FaTimes size={24} />
                         </button>
-                        <h2 className="text-lg font-bold mb-4">All Prescriptions</h2>
+                        <h2 className="text-lg text-black font-bold mb-4">All Prescriptions</h2>
                         {prescriptions.map((prescription) => (
                             <div
                                 key={prescription.id}

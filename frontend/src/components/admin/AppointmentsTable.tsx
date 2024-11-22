@@ -5,37 +5,34 @@ import { BsChevronLeft, BsChevronRight, BsThreeDotsVertical } from "react-icons/
 import { MdDeleteOutline, MdOutlineEdit } from "react-icons/md";
 import { IoEyeOutline } from "react-icons/io5";
 import { IoIosArrowDown } from "react-icons/io";
-import { getAllUsers } from "../../api/Api";
+import { getAppointments } from "../../api/Api";
 import { useMutation } from "@tanstack/react-query";
+import { Appointment } from "../../api/ModelInterfaces";
 import { handleAxiosError } from "../../utils/AxiosError";
-import { User } from "../../api/ModelInterfaces";
-import DoctorTable from "./DoctorTable";
-import AppointmentsTable from "./AppointmentsTable";
 
-const AdminTable = () => {
+const AppointmentsTable = () => {
+    const [appointments, setAppointments] = useState<Appointment[]>([]);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [users, setUsers] = useState<User[]>([]);
     const [search, setSearch] = useState("");
-    const [sortConfig, setSortConfig] = useState<{ key: keyof User | null; direction: 'asc' | 'desc' }>({ key: null, direction: "asc" });
+    const [sortConfig, setSortConfig] = useState<{ key: keyof Appointment | null; direction: 'asc' | 'desc' }>({ key: null, direction: "asc" });
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
     const [openActionMenuId, setOpenActionMenuId] = useState<number | null>(null);
     const [isOpen, setIsOpen] = useState(false);
     const selectRef = useRef<HTMLDivElement>(null);
 
-    // Fetch users
-    const { mutate: fetchUsers } = useMutation({
-        mutationFn: getAllUsers,
+    const {mutate: fetchAppointments} = useMutation({
+        mutationFn: getAppointments,
         onSuccess: (data: any) => {
-            const usersArray = Array.isArray(data) ? data :
+            const appointmentsArray = Array.isArray(data) ? data :
                 (data?.data ? (Array.isArray(data.data) ? data.data : []) : []);
 
-            if (usersArray.length > 0) {
-                setUsers(usersArray);
+            if (appointmentsArray.length > 0) {
+                setAppointments(appointmentsArray);
                 setError(null);
             } else {
-                setError("No users found");
+                setError("No appointments found");
             }
             setLoading(false);
         },
@@ -48,25 +45,27 @@ const AdminTable = () => {
     });
 
     useEffect(() => {
-        setLoading(true);
-        fetchUsers();
-    }, [fetchUsers]);
+        setLoading(true)
+        fetchAppointments();
+    }, [fetchAppointments]);
 
-    // Handle search
+    // Handle search across all relevant fields
     const filteredData = useMemo(() => {
-        return users.filter(user =>
-            Object.entries(user).some(([key, value]) => {
-                // Only search through specific fields
-                if (['name', 'email'].includes(key) && value) {
-                    return value.toString().toLowerCase().includes(search.toLowerCase());
+        return appointments.filter(appointment =>
+            Object.entries(appointment).some(([key, value]) => {
+                if (key === 'doctor' && value) {
+                    return value.name.toLowerCase().includes(search.toLowerCase());
+                }
+                if (key === 'user' && value) {
+                    return value.name.toLowerCase().includes(search.toLowerCase());
                 }
                 return false;
             })
         );
-    }, [users, search]);
+    }, [appointments, search]);
 
     // Handle sort
-    const handleSort = (key: keyof User) => {
+    const handleSort = (key: keyof Appointment) => {
         let direction: 'asc' | 'desc' = "asc";
         if (sortConfig.key === key && sortConfig.direction === "asc") {
             direction = "desc";
@@ -78,6 +77,12 @@ const AdminTable = () => {
         if (!sortConfig.key) return filteredData;
 
         return [...filteredData].sort((a, b) => {
+            if (sortConfig.key === 'date') {
+                return sortConfig.direction === "asc" 
+                    ? new Date(a.date).getTime() - new Date(b.date).getTime()
+                    : new Date(b.date).getTime() - new Date(a.date).getTime();
+            }
+
             const aValue = a[sortConfig.key!];
             const bValue = b[sortConfig.key!];
 
@@ -114,7 +119,9 @@ const AdminTable = () => {
         setOpenActionMenuId(openActionMenuId === id ? null : id);
     };
 
-    const handleToggle = () => setIsOpen(prev => !prev);
+    const formatDate = (date: Date) => {
+        return new Date(date).toLocaleString();
+    };
 
     useEffect(() => {
         const handleOutsideClick = (event: MouseEvent) => {
@@ -128,11 +135,11 @@ const AdminTable = () => {
     }, []);
 
     if (loading) {
-        return <div className="text-center py-8">Loading...</div>;
+        return <div className="text-center py-4">Loading appointments...</div>;
     }
 
     if (error) {
-        return <div className="text-center py-8 text-red-500">{error}</div>;
+        return <div className="text-center py-4 text-red-500">{error}</div>;
     }
 
     return (
@@ -140,7 +147,7 @@ const AdminTable = () => {
             <div className="max-w-9xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="mb-4 flex items-center justify-between">
                     <input
-                        placeholder="Search by name or email..."
+                        placeholder="Search appointments..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="max-w-sm py-2.5 px-4 border border-gray-200 rounded-md outline-none focus:border-blue-300"
@@ -151,62 +158,68 @@ const AdminTable = () => {
                     <table className="w-full text-sm">
                         <thead className="bg-gray-100">
                             <tr>
-                                <th className="p-3 text-left font-medium text-gray-700">Profile</th>
-                                <th
+                                <th className="p-3 text-left font-medium text-gray-700">Doctor</th>
+                                <th className="p-3 text-left font-medium text-gray-700">Patient</th>
+                                <th 
                                     className="p-3 text-left font-medium text-gray-700 cursor-pointer"
-                                    onClick={() => handleSort('name')}
+                                    onClick={() => handleSort('date')}
                                 >
                                     <div className="flex items-center gap-[5px]">
-                                        Name
+                                        Date & Time
                                         <HiOutlineArrowsUpDown className="hover:bg-gray-200 p-[5px] rounded-md text-[1.6rem]" />
                                     </div>
                                 </th>
-                                <th
-                                    className="p-3 text-left font-medium text-gray-700 cursor-pointer"
-                                    onClick={() => handleSort('email')}
-                                >
-                                    <div className="flex items-center gap-[5px]">
-                                        Email
-                                        <HiOutlineArrowsUpDown className="hover:bg-gray-200 p-[5px] rounded-md text-[1.6rem]" />
-                                    </div>
-                                </th>
-                                <th className="p-3 text-left font-medium text-gray-700">Created At</th>
-                                <th className="p-3 text-left font-medium text-gray-700">Updated At</th>
                                 <th className="p-3 text-left font-medium text-gray-700">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {paginatedData.map((user) => (
-                                <tr key={user.id} className="border-t border-gray-200 hover:bg-gray-50">
-                                     <td className="p-3">
-                                        <img 
-                                            src={user.profilePic} 
-                                            alt={user.name}
-                                            className="w-10 h-10 rounded-full object-cover"
-                                        />
+                            {paginatedData.map((appointment) => (
+                                <tr key={appointment.id} className="border-t border-gray-200 hover:bg-gray-50">
+                                    <td className="p-3">
+                                        <div className="flex items-center gap-3">
+                                            <img 
+                                                src={appointment.doctor.profilePic} 
+                                                alt={appointment.doctor.name}
+                                                className="w-10 h-10 rounded-full object-cover"
+                                            />
+                                            <div>
+                                                <p className="font-medium text-black">{appointment.doctor.name}</p>
+                                                <p className="text-gray-500 text-xs">{appointment.doctor.specialization}</p>
+                                            </div>
+                                        </div>
                                     </td>
-                                    <td className="p-3 text-black">{user.name}</td>
-                                    <td className="p-3 text-black">{user.email}</td>
-                                    <td className="p-3 text-black">
-                                        {new Date(user.createdAt).toLocaleDateString()}
+                                    <td className="p-3">
+                                        <div className="flex items-center gap-3">
+                                            <img 
+                                                src={appointment.user.profilePic} 
+                                                alt={appointment.user.name}
+                                                className="w-10 h-10 rounded-full object-cover"
+                                            />
+                                            <div>
+                                                <p className="font-medium text-black">{appointment.user.name}</p>
+                                                <p className="text-gray-500 text-xs">{appointment.user.email}</p>
+                                            </div>
+                                        </div>
                                     </td>
-                                    <td className="p-3 text-black">
-                                        {new Date(user.updatedAt).toLocaleDateString()}
-                                    </td>
+                                    <td className="p-3 text-black">{formatDate(appointment.date)}</td>
                                     <td className="p-3 relative">
-                                        <BsThreeDotsVertical
-                                            onClick={() => toggleActionMenu(user.id)}
-                                            className="action-btn text-gray-600 cursor-pointer"
+                                        <BsThreeDotsVertical 
+                                            onClick={() => toggleActionMenu(appointment.id)}
+                                            className="action-btn text-gray-600 cursor-pointer" 
                                         />
 
-                                        <div className={`${openActionMenuId === user.id ? "opacity-100 scale-[1] z-30" : "opacity-0 scale-[0.8] z-[-1]"} zenui-table absolute top-[90%] right-[80%] p-1.5 rounded-md bg-white shadow-md min-w-[160px] transition-all duration-100`}>
+                                        <div className={`${
+                                            openActionMenuId === appointment.id 
+                                                ? "opacity-100 scale-[1] z-30" 
+                                                : "opacity-0 scale-[0.8] z-[-1]"
+                                        } absolute top-[90%] right-[80%] p-1.5 rounded-md bg-white shadow-md min-w-[160px] transition-all duration-100`}>
                                             <p className="flex items-center gap-[8px] text-[0.9rem] py-1.5 px-2 w-full rounded-md text-gray-700 cursor-pointer hover:bg-gray-50 transition-all duration-200">
                                                 <MdOutlineEdit />
-                                                Edit
+                                                Reschedule
                                             </p>
                                             <p className="flex items-center gap-[8px] text-[0.9rem] py-1.5 px-2 w-full rounded-md text-gray-700 cursor-pointer hover:bg-gray-50 transition-all duration-200">
                                                 <MdDeleteOutline />
-                                                Delete
+                                                Cancel
                                             </p>
                                             <p className="flex items-center gap-[8px] text-[0.9rem] py-1.5 px-2 w-full rounded-md text-gray-700 cursor-pointer hover:bg-gray-50 transition-all duration-200">
                                                 <IoEyeOutline />
@@ -221,7 +234,7 @@ const AdminTable = () => {
 
                     {!paginatedData?.length && (
                         <p className="text-[0.9rem] text-gray-500 py-6 text-center w-full">
-                            No users found!
+                            No appointments found!
                         </p>
                     )}
                 </div>
@@ -234,14 +247,15 @@ const AdminTable = () => {
 
                         <div ref={selectRef} className="relative w-44">
                             <button
-                                onClick={handleToggle}
-                                className="w-max px-2 py-0.5 text-left text-black bg-white border border-gray-300 rounded shadow-sm flex items-center justify-between gap-[10px] hover:border-gray-400 focus:outline-none"
+                                onClick={() => setIsOpen(!isOpen)}
+                                className="w-max px-2 py-0.5 text-black text-left bg-white border border-gray-300 rounded shadow-sm flex items-center justify-between gap-[10px] hover:border-gray-400 focus:outline-none"
                             >
                                 {pageSize}
                                 <IoIosArrowDown className={`${isOpen ? "rotate-[180deg]" : "rotate-0"} transition-all text-black duration-200`} />
                             </button>
+                            
                             {isOpen && (
-                                <div className="absolute w-max mt-1 bg-white border text-black border-gray-300 rounded shadow-lg">
+                                <div className="absolute w-max mt-1 text-black bg-white border border-gray-300 rounded shadow-lg">
                                     {[5, 10, 20, 50].map((size) => (
                                         <div
                                             key={size}
@@ -282,7 +296,11 @@ const AdminTable = () => {
                                     <button
                                         key={pageNum}
                                         onClick={() => handlePageChange(pageNum)}
-                                        className={`${pageNum === currentPage ? "bg-black text-white" : ""} border border-gray-200 px-[10px] text-[0.9rem] py-[1px] rounded-md`}
+                                        className={`${
+                                            pageNum === currentPage 
+                                                ? "bg-black text-white" 
+                                                : "hover:bg-gray-50"
+                                        } border border-gray-200 px-[10px] text-[0.9rem] py-[1px] rounded-md`}
                                     >
                                         {pageNum}
                                     </button>
@@ -300,12 +318,8 @@ const AdminTable = () => {
                     </div>
                 </div>
             </div>
-            <DoctorTable/>
-            <AppointmentsTable/>
         </div>
     );
 };
 
-
-
-export default AdminTable;
+export default AppointmentsTable;

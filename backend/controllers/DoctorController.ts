@@ -41,60 +41,86 @@ export const getAllDoctors = async (req: Request, res: Response, next: NextFunct
 
 export const createDoctor = async (req: Request, res: Response, next: NextFunction) => {
     try {
-     const doctor = await prisma.doctor.create({ data: req.body });
+        const { password, name, experience,email,specialization,description } = req.body;
 
-     res.status(201).json({
-        status: 'success',
-        message: 'Doctor created successfully',
-        data: doctor
-     })
+        if (!password) {
+            return next(new AppError("Password is required", 400));
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10); 
+
+        const doctor = await prisma.doctor.create({
+            data: {
+                name, experience,email,specialization,description,
+                password: hashedPassword, 
+            },
+        });
+
+        res.status(201).json({
+            status: "success",
+            message: "Doctor created successfully",
+            data: doctor
+        });
 
     } catch (err) {
-        return next(new AppError("Error creating a doctor", 500))
+        console.error("Error creating a doctor:", err);
+        return next(new AppError("Error creating a doctor", 500));
     }
-}
+};
+
 
 export const loginDoctor = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { email, password} = req.body;
+        const { email, password } = req.body;
 
-        const doctor = await prisma.doctor.findFirst({
-            where: { email },
+        if (!email || !password) {
+            return next(new AppError("Please provide email and password", 400));
+        }
+
+        // Fetch doctor data from the database
+        const doctor = await prisma.doctor.findUnique({
+            where: { email: email },
             select: {
                 name: true,
                 password: true,
                 role: true,
-                id: true
-            }
+                id: true,
+            },
         });
 
-        if(!doctor) return next(new AppError("Doctor not found", 404));
+        // If doctor is not found
+        if (!doctor) {
+            return next(new AppError("Doctor not found", 404));
+        }
 
-        const token = jwt.sign({id: doctor?.id}, process.env.JWT_TOKEN!, {
+        // Compare provided password with the stored hashed password
+        const isMatch = await bcrypt.compare(password, doctor.password);
+        if (!isMatch) {
+            return next(new AppError("Incorrect password", 401));
+        }
+
+        // Generate a JWT token
+        const token = jwt.sign({ id: doctor.id }, process.env.JWT_TOKEN!, {
             expiresIn: "10d",
         });
 
-        const isMatch = await bcrypt.compare(password, doctor!.password);
-        if (!isMatch) {
-         return next(new AppError("Oops! You entered the wrong password", 401));
-        }
-
+        // Send a success response
         res.status(200).json({
             status: "success",
             message: "Logged in successfully",
-            token: token,
+            token,
             data: {
                 name: doctor.name,
                 role: doctor.role,
-                id: doctor.id
-            }
+                id: doctor.id,
+            },
         });
-
     } catch (err) {
-        console.log(err);
-        return next(new AppError("Error logging a doctor", 500))
+        console.error("Login Doctor Error:", err);
+        return next(new AppError("An error occurred while logging in", 500));
     }
-}
+};
+
 
 export const getDoctorBySpecialization = async (req: Request, res: Response, next: NextFunction) => {
     try {
